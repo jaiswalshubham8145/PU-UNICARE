@@ -1,0 +1,323 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Premium Light Mode - Soft Platinum with Violet undertones */
+    --background: 240 20% 94%;
+
+    /* Deep Navy Text for elegance */
+    --foreground: 230 45% 18%;
+
+    --card: 240 25% 97%;
+    --card-foreground: 230 45% 18%;
+
+    --popover: 240 25% 97%;
+    --popover-foreground: 230 45% 18%;
+
+    /* Luxurious Gold - Warmer, richer tone */
+    --gold: 42 100% 50%;
+    --gold-foreground: 230 45% 12%;
+
+    /* Rose Gold accent */
+    --rose-gold: 15 70% 65%;
+    --rose-gold-foreground: 15 40% 15%;
+
+    /* Royal Blue - Deeper, more regal */
+    --royal-blue: 230 75% 55%;
+    --royal-blue-foreground: 0 0% 100%;
+
+    /* Premium Violet */
+    --violet: 265 85% 60%;
+    --violet-foreground: 0 0% 100%;
+
+    /* Primary - Deep Royal Navy */
+    --primary: 230 65% 25%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 240 20% 92%;
+    --secondary-foreground: 230 45% 18%;
+
+    --muted: 240 15% 88%;
+    --muted-foreground: 230 30% 45%;
+
+    --accent: 265 60% 92%;
+    --accent-foreground: 265 85% 35%;
+
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 15% 85%;
+    --input: 240 15% 85%;
+    --ring: 265 70% 50%;
+
+    --radius: 0.75rem;
+
+    --success: 155 75% 35%;
+    --success-foreground: 155 80% 95%;
+
+    --warning: 40 95% 48%;
+    --warning-foreground: 40 90% 12%;
+
+    --info: 210 100% 50%;
+    --info-foreground: 210 100% 95%;
+
+    /* Premium Multi-Stop Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(230 65% 20%) 0%, hsl(265 70% 45%) 50%, hsl(290 60% 40%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(265 85% 60%) 0%, hsl(290 75% 50%) 50%, hsl(320 70% 55%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(42 100% 50%) 0%, hsl(35 100% 55%) 30%, hsl(15 70% 60%) 70%, hsl(350 65% 55%) 100%);
+    --gradient-card: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+    --gradient-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%);
+    --gradient-royal: linear-gradient(135deg, hsl(230 75% 55%) 0%, hsl(265 85% 60%) 100%);
+    --gradient-luxury: linear-gradient(135deg, hsl(42 100% 50%) 0%, hsl(15 70% 65%) 50%, hsl(290 60% 50%) 100%);
+    --gradient-midnight: linear-gradient(180deg, hsl(230 45% 12%) 0%, hsl(265 50% 18%) 50%, hsl(290 40% 15%) 100%);
+  }
+
+  .dark {
+    /* Premium Dark Mode - Deep Midnight with Violet undertones */
+    --background: 235 35% 8%;
+    /* Soft Moonlight White */
+    --foreground: 220 25% 92%;
+
+    --card: 235 35% 11%;
+    --card-foreground: 220 25% 92%;
+
+    --popover: 235 35% 11%;
+    --popover-foreground: 220 25% 92%;
+
+    /* Vibrant Royal Blue */
+    --primary: 230 85% 65%;
+    --primary-foreground: 230 65% 8%;
+
+    --secondary: 265 25% 18%;
+    --secondary-foreground: 220 25% 92%;
+
+    --muted: 255 20% 22%;
+    --muted-foreground: 240 15% 70%;
+
+    --accent: 265 50% 25%;
+    --accent-foreground: 265 85% 80%;
+
+    --destructive: 0 70% 45%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 255 25% 20%;
+    --input: 255 25% 20%;
+    --ring: 42 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply text-foreground;
+    background-color: transparent;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer utilities {
+
+  /* Premium Glass Effects */
+  .glass-nav {
+    @apply bg-white/[0.08] backdrop-blur-2xl border-b border-white/[0.15] shadow-lg;
+  }
+
+  .card-elevated {
+    @apply bg-card text-card-foreground rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300;
+  }
+
+  .glass-panel {
+    @apply bg-gradient-to-br from-white/[0.15] to-white/5 backdrop-blur-2xl border border-white/20;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+
+  .glass-panel-dark {
+    @apply bg-gradient-to-br from-slate-900/90 to-purple-950/80 backdrop-blur-2xl border border-white/10;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+
+  .glass-input {
+    @apply bg-white/[0.08] border-white/20 focus:border-violet-400/60 focus:bg-white/[0.12] focus:ring-2 focus:ring-violet-500/20 text-white placeholder:text-white/40 transition-all duration-300 rounded-xl;
+  }
+
+  /* Premium Text Gradients */
+  .text-gradient-gold {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-yellow-300 to-orange-400 animate-shimmer bg-[length:200%_auto];
+    filter: drop-shadow(0 2px 4px rgba(251, 191, 36, 0.3));
+  }
+
+  .text-gradient-luxury {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-amber-300 via-rose-400 to-violet-500 animate-shimmer bg-[length:200%_auto];
+  }
+
+  .text-gradient-royal {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-500 to-purple-500;
+  }
+
+  /* Premium Card Effects */
+  .card-hover-effect {
+    @apply transition-all duration-500 ease-out hover:scale-[1.02] hover:border-violet-400/40;
+  }
+
+  .card-hover-effect:hover {
+    box-shadow: 0 20px 60px -10px rgba(124, 58, 237, 0.25);
+  }
+
+  .glass-dialog {
+    @apply bg-gradient-to-br from-slate-900/95 to-purple-950/95 backdrop-blur-2xl border border-white/10 text-white rounded-2xl;
+    box-shadow: 0 25px 80px -10px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Shimmer Animation */
+  .animate-shimmer {
+    animation: shimmer 3s linear infinite;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: 0% 50%;
+    }
+
+    100% {
+      background-position: 200% 50%;
+    }
+  }
+
+  /* Luxury Border Effects */
+  .luxury-border-bottom {
+    @apply relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-[1px] after:bg-gradient-to-r after:from-transparent after:via-violet-400/60 after:to-transparent;
+  }
+
+  .hover-luxury {
+    @apply transition-all duration-500 hover:-translate-y-2 hover:border-violet-400/40;
+  }
+
+  .hover-luxury:hover {
+    box-shadow: 0 25px 60px -15px rgba(124, 58, 237, 0.3);
+  }
+
+  /* Premium Glass Card */
+  .glass-card-hover {
+    @apply bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-2xl border border-white/10 shadow-lg transition-all duration-500 hover:border-violet-400/30 hover:-translate-y-2 hover:bg-card/90;
+  }
+
+  .glass-card-hover:hover {
+    box-shadow: 0 20px 50px -10px rgba(124, 58, 237, 0.2);
+  }
+
+  /* Premium Text Styles */
+  .text-gradient-premium {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-300 bg-[length:200%_auto] animate-shimmer;
+  }
+
+  .text-gold-solid {
+    @apply text-amber-400;
+    filter: drop-shadow(0 2px 4px rgba(251, 191, 36, 0.25));
+  }
+
+  .text-violet-glow {
+    @apply text-violet-400;
+    filter: drop-shadow(0 2px 8px rgba(139, 92, 246, 0.4));
+  }
+
+  /* Premium Buttons */
+  .btn-premium {
+    @apply bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:from-amber-400 hover:via-orange-400 hover:to-rose-400 text-white font-bold shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all duration-300 hover:scale-[1.02];
+  }
+
+  .btn-royal {
+    @apply bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-bold shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all duration-300 hover:scale-[1.02];
+  }
+
+  /* Glow Effects */
+  .glow-gold {
+    box-shadow: 0 0 40px rgba(251, 191, 36, 0.25), 0 0 80px rgba(251, 191, 36, 0.1);
+  }
+
+  .glow-violet {
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.25), 0 0 80px rgba(139, 92, 246, 0.1);
+  }
+}
+
+/* Premium Animations - Global Scope */
+/* Custom Easing for Ultra-Smooth Effects */
+:root {
+  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-in-out-quint: cubic-bezier(0.86, 0, 0.07, 1);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 30px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translate3d(30px, 0, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes shimmer-luxury {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s var(--ease-out-expo) forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.6s var(--ease-out-expo) forwards;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.8s var(--ease-out-expo) forwards;
+}
+
+/* Base styles for smoother transitions globally */
+* {
+  @apply transition-colors duration-200 ease-in-out;
+}
+
+.card-enter {
+  opacity: 0;
+  animation: fadeInUp 0.6s var(--ease-out-expo) forwards;
+}
