@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import { Mail, ArrowLeft, CheckCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { isUniversityEmail, getUniversityEmailError } from "@/lib/emailValidation";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -16,6 +17,13 @@ const ForgotPassword = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate university email domain
+    if (!isUniversityEmail(email)) {
+      toast.error(getUniversityEmailError());
+      return;
+    }
+
     setIsLoading(true);
 
     try {

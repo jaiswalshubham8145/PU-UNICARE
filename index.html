@@ -1,32 +1,71 @@
 <!doctype html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- TODO: Set the document title to the name of your application -->
-  <title>Unicare</title>
-  <meta name="description" content="Unicare Project" />
-  <meta name="author" content="Unicare Team" />
-
-  <!-- TODO: Update og:title to match your application name -->
-  <meta property="og:title" content="Unicare" />
-  <meta property="og:description" content="Unicare Project" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  
+  <!-- Primary Meta Tags -->
+  <title>PU UNICARE - Parul University Maintenance Management System</title>
+  <meta name="title" content="PU UNICARE - Parul University Maintenance Management System" />
+  <meta name="description" content="AI-powered maintenance complaint management platform for Parul University. Register, track, and resolve campus facility issues with real-time updates." />
+  <meta name="keywords" content="Parul University, maintenance, complaint, facility, management, PU UNICARE, campus, tracking" />
+  <meta name="author" content="PU UNICARE Development Team" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#7c3aed" />
+  
+  <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
-
-  <meta name="twitter:card" content="summary_large_image" />
-
+  <meta property="og:url" content="https://unicare.pu.edu/" />
+  <meta property="og:title" content="PU UNICARE - Parul University Maintenance Management" />
+  <meta property="og:description" content="AI-powered maintenance complaint management platform for Parul University." />
+  <meta property="og:image" content="/og-image.png" />
+  <meta property="og:site_name" content="PU UNICARE" />
+  
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://unicare.pu.edu/" />
+  <meta property="twitter:title" content="PU UNICARE - Parul University Maintenance Management" />
+  <meta property="twitter:description" content="AI-powered maintenance complaint management platform for Parul University." />
+  <meta property="twitter:image" content="/og-image.png" />
+  
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="PU UNICARE" />
+  <link rel="apple-touch-icon" href="/icon-192.png" />
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+  
+  <!-- Preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  
   <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap"
-    rel="stylesheet">
-</head>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet" />
 
+  <!-- Critical CSS inlining -->
+  <style>
+    body { margin: 0; background: #0a0a0f; }
+    #root { min-height: 100vh; }
+    .initial-loader { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .initial-loader::after { content: ''; width: 40px; height: 40px; border: 3px solid rgba(139,92,246,0.3); border-top-color: #8b5cf6; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
 <body>
-  <div id="root"></div>
+  <noscript>
+    <div style="padding: 20px; text-align: center; color: white; background: #0a0a0f; min-height: 100vh; font-family: sans-serif;">
+      <h1>PU UNICARE</h1>
+      <p>JavaScript is required to run this application.</p>
+      <p>Please enable JavaScript in your browser settings.</p>
+    </div>
+  </noscript>
+  <div id="root">
+    <div class="initial-loader" aria-label="Loading application"></div>
+  </div>
   <script type="module" src="/src/main.tsx"></script>
 </body>
-
 </html>

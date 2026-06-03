@@ -1,8 +1,8 @@
-
 import { Suspense, lazy } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 // Public Pages
 const Index = lazy(() => import("./pages/Index"));
@@ -17,14 +17,19 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Register = lazy(() => import("./pages/Register"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const ComplaintWizard = lazy(() => import("./pages/ComplaintWizard"));
+const BatchComplaint = lazy(() => import("./pages/BatchComplaint"));
 const KnowledgeBase = lazy(() => import("./pages/KnowledgeBase"));
 const StaffDirectory = lazy(() => import("./pages/StaffDirectory"));
 const HelpCenter = lazy(() => import("./pages/HelpCenter"));
+const SatisfactionSurvey = lazy(() => import("./pages/SatisfactionSurvey"));
+const ApiDocs = lazy(() => import("./pages/ApiDocs"));
 
 // Protected Pages
 const Profile = lazy(() => import("./pages/Profile"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Notifications = lazy(() => import("./pages/Notifications"));
+const Inventory = lazy(() => import("./pages/dashboard/Inventory"));
+const CalendarView = lazy(() => import("./pages/dashboard/CalendarView"));
 
 // Dashboard Pages
 const FacultyDashboard = lazy(() => import("./pages/dashboard/FacultyDashboard"));
@@ -52,248 +57,104 @@ const MaintenanceOnHoldComplaints = lazy(() => import("./pages/dashboard/Mainten
 const MaintenanceCompletedComplaints = lazy(() => import("./pages/dashboard/MaintenanceCompletedComplaints"));
 
 const LoadingFallback = () => (
-    <div className="flex h-screen w-full items-center justify-center bg-background">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+  <div className="flex h-screen w-full items-center justify-center bg-background" role="status" aria-label="Loading page">
+    <div className="flex flex-col items-center gap-4">
+      <Loader2 className="h-10 w-10 animate-spin text-primary" aria-hidden="true" />
+      <span className="text-sm text-muted-foreground">Loading...</span>
     </div>
+  </div>
+);
+
+const RouteErrorFallback = ({ error }: { error?: Error }) => (
+  <div className="flex h-screen w-full items-center justify-center bg-background p-4">
+    <div className="max-w-md w-full text-center">
+      <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
+        <span className="text-3xl" aria-hidden="true">⚠️</span>
+      </div>
+      <h2 className="text-xl font-bold mb-2">Page Error</h2>
+      <p className="text-muted-foreground mb-4">Failed to load this page.</p>
+      {error && <pre className="text-left text-xs bg-black/20 p-4 rounded-md overflow-auto mb-4 text-red-400">{error.message}</pre>}
+      <button onClick={() => window.location.reload()} className="bg-primary text-primary-foreground px-4 py-2 rounded-md">
+        Reload Page
+      </button>
+    </div>
+  </div>
 );
 
 const AppRoutes = () => {
-    return (
-        <Suspense fallback={<LoadingFallback />}>
-            <Routes>
-                {/* Public Routes */}
-                <Route path="/" element={<Index />} />
-                <Route path="/help" element={<KnowledgeBase />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/maintenance" element={<Maintenance />} />
-                <Route path="/register-complaint" element={<RegisterComplaint />} />
-                <Route path="/complaint-wizard" element={<ComplaintWizard />} />
-                <Route path="/track" element={<TrackComplaint />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/staff-directory" element={<StaffDirectory />} />
-                <Route path="/help-center" element={<HelpCenter />} />
+  return (
+    <ErrorBoundary>
+      <Suspense fallback={<LoadingFallback />}>
+        <main id="main-content" tabIndex={-1} className="outline-none">
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<Index />} />
+            <Route path="/help" element={<KnowledgeBase />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/maintenance" element={<Maintenance />} />
+            <Route path="/register-complaint" element={<RegisterComplaint />} />
+            <Route path="/complaint-wizard" element={<ComplaintWizard />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/staff-directory" element={<StaffDirectory />} />
+            <Route path="/help-center" element={<HelpCenter />} />
+            <Route path="/api-docs" element={<ApiDocs />} />
 
-                {/* Protected Routes - Profile & Settings */}
-                <Route
-                    path="/profile"
-                    element={
-                        <ProtectedRoute>
-                            <Profile />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/notifications"
-                    element={
-                        <ProtectedRoute>
-                            <Notifications />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/settings"
-                    element={
-                        <ProtectedRoute>
-                            <Settings />
-                        </ProtectedRoute>
-                    }
-                />
+            {/* Protected Routes */}
+            <Route path="/register-batch" element={<ProtectedRoute><BatchComplaint /></ProtectedRoute>} />
+            <Route path="/track" element={<ProtectedRoute><TrackComplaint /></ProtectedRoute>} />
+            <Route path="/survey" element={<ProtectedRoute><SatisfactionSurvey /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
 
-                {/* Dashboard Routes */}
-                <Route
-                    path="/dashboard/faculty"
-                    element={
-                        <ProtectedRoute allowedRoles={["faculty"]}>
-                            <FacultyDashboard />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/dashboard/cr"
-                    element={
-                        <ProtectedRoute allowedRoles={["cr", "admin"]}>
-                            <CRDashboard />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/dashboard/hod"
-                    element={
-                        <ProtectedRoute allowedRoles={["hod", "admin", "principal"]}>
-                            <HODDashboard />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/dashboard/hod/pending"
-                    element={
-                        <ProtectedRoute allowedRoles={["hod", "admin", "principal"]}>
-                            <HODPendingComplaints />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/dashboard/hod/in-progress"
-                    element={
-                        <ProtectedRoute allowedRoles={["hod", "admin", "principal"]}>
-                            <HODInProgressComplaints />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/dashboard/hod/completed"
-                    element={
-                        <ProtectedRoute allowedRoles={["hod", "admin", "principal"]}>
-                            <HODCompletedComplaints />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/dashboard/hod/all"
-                    element={
-                        <ProtectedRoute allowedRoles={["hod", "admin", "principal"]}>
-                            <HODAllComplaints />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/dashboard/principal"
-                    element={
-                        <ProtectedRoute allowedRoles={["principal", "admin"]}>
-                            <PrincipalDashboard />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/dashboard/principal/all"
-                    element={
-                        <ProtectedRoute allowedRoles={["principal", "admin"]}>
-                            <PrincipalAllComplaints />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/dashboard/principal/delayed"
-                    element={
-                        <ProtectedRoute allowedRoles={["principal", "admin"]}>
-                            <PrincipalDelayedComplaints />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/dashboard/principal/in-progress"
-                    element={
-                        <ProtectedRoute allowedRoles={["principal", "admin"]}>
-                            <PrincipalInProgressComplaints />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/dashboard/principal/resolved"
-                    element={
-                        <ProtectedRoute allowedRoles={["principal", "admin"]}>
-                            <PrincipalResolvedComplaints />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/dashboard/maintenance"
-                    element={
-                        <ProtectedRoute allowedRoles={["maintenance_staff", "admin"]}>
-                            <MaintenanceStaffDashboard />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/dashboard/maintenance/new-assigned"
-                    element={
-                        <ProtectedRoute allowedRoles={["maintenance_staff", "admin"]}>
-                            <MaintenanceNewAssignedComplaints />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/dashboard/maintenance/in-progress"
-                    element={
-                        <ProtectedRoute allowedRoles={["maintenance_staff", "admin"]}>
-                            <MaintenanceInProgressComplaints />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/dashboard/maintenance/on-hold"
-                    element={
-                        <ProtectedRoute allowedRoles={["maintenance_staff", "admin"]}>
-                            <MaintenanceOnHoldComplaints />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/dashboard/maintenance/completed"
-                    element={
-                        <ProtectedRoute allowedRoles={["maintenance_staff", "admin"]}>
-                            <MaintenanceCompletedComplaints />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/dashboard/admin"
-                    element={
-                        <ProtectedRoute allowedRoles={["admin"]}>
-                            <AdminDashboard />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/dashboard/admin/all"
-                    element={
-                        <ProtectedRoute allowedRoles={["admin"]}>
-                            <AdminAllComplaints />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/dashboard/admin/pending"
-                    element={
-                        <ProtectedRoute allowedRoles={["admin"]}>
-                            <AdminPendingComplaints />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/dashboard/admin/in-progress"
-                    element={
-                        <ProtectedRoute allowedRoles={["admin"]}>
-                            <AdminInProgressComplaints />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/dashboard/admin/completed"
-                    element={
-                        <ProtectedRoute allowedRoles={["admin"]}>
-                            <AdminCompletedComplaints />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/dashboard/admin/users"
-                    element={
-                        <ProtectedRoute allowedRoles={["admin"]}>
-                            <AdminUserManagement />
-                        </ProtectedRoute>
-                    }
-                />
+            {/* Faculty Dashboard */}
+            <Route path="/dashboard/faculty" element={<ProtectedRoute allowedRoles={["faculty"]}><FacultyDashboard /></ProtectedRoute>} />
 
-                {/* Catch-all Route */}
-                <Route path="*" element={<NotFound />} />
-            </Routes>
-        </Suspense>
-    );
+            {/* CR Dashboard */}
+            <Route path="/dashboard/cr" element={<ProtectedRoute allowedRoles={["cr", "admin"]}><CRDashboard /></ProtectedRoute>} />
+
+            {/* HOD Dashboard */}
+            <Route path="/dashboard/hod" element={<ProtectedRoute allowedRoles={["hod", "admin", "principal"]}><HODDashboard /></ProtectedRoute>} />
+            <Route path="/dashboard/hod/pending" element={<ProtectedRoute allowedRoles={["hod", "admin", "principal"]}><HODPendingComplaints /></ProtectedRoute>} />
+            <Route path="/dashboard/hod/in-progress" element={<ProtectedRoute allowedRoles={["hod", "admin", "principal"]}><HODInProgressComplaints /></ProtectedRoute>} />
+            <Route path="/dashboard/hod/completed" element={<ProtectedRoute allowedRoles={["hod", "admin", "principal"]}><HODCompletedComplaints /></ProtectedRoute>} />
+            <Route path="/dashboard/hod/all" element={<ProtectedRoute allowedRoles={["hod", "admin", "principal"]}><HODAllComplaints /></ProtectedRoute>} />
+
+            {/* Principal Dashboard */}
+            <Route path="/dashboard/principal" element={<ProtectedRoute allowedRoles={["principal", "admin"]}><PrincipalDashboard /></ProtectedRoute>} />
+            <Route path="/dashboard/principal/all" element={<ProtectedRoute allowedRoles={["principal", "admin"]}><PrincipalAllComplaints /></ProtectedRoute>} />
+            <Route path="/dashboard/principal/delayed" element={<ProtectedRoute allowedRoles={["principal", "admin"]}><PrincipalDelayedComplaints /></ProtectedRoute>} />
+            <Route path="/dashboard/principal/in-progress" element={<ProtectedRoute allowedRoles={["principal", "admin"]}><PrincipalInProgressComplaints /></ProtectedRoute>} />
+            <Route path="/dashboard/principal/resolved" element={<ProtectedRoute allowedRoles={["principal", "admin"]}><PrincipalResolvedComplaints /></ProtectedRoute>} />
+
+            {/* Maintenance Dashboard */}
+            <Route path="/dashboard/maintenance" element={<ProtectedRoute allowedRoles={["maintenance_staff", "admin"]}><MaintenanceStaffDashboard /></ProtectedRoute>} />
+            <Route path="/dashboard/maintenance/new-assigned" element={<ProtectedRoute allowedRoles={["maintenance_staff", "admin"]}><MaintenanceNewAssignedComplaints /></ProtectedRoute>} />
+            <Route path="/dashboard/maintenance/in-progress" element={<ProtectedRoute allowedRoles={["maintenance_staff", "admin"]}><MaintenanceInProgressComplaints /></ProtectedRoute>} />
+            <Route path="/dashboard/maintenance/on-hold" element={<ProtectedRoute allowedRoles={["maintenance_staff", "admin"]}><MaintenanceOnHoldComplaints /></ProtectedRoute>} />
+            <Route path="/dashboard/maintenance/completed" element={<ProtectedRoute allowedRoles={["maintenance_staff", "admin"]}><MaintenanceCompletedComplaints /></ProtectedRoute>} />
+
+            {/* Admin Dashboard */}
+            <Route path="/dashboard/admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/dashboard/admin/all" element={<ProtectedRoute allowedRoles={["admin"]}><AdminAllComplaints /></ProtectedRoute>} />
+            <Route path="/dashboard/admin/pending" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPendingComplaints /></ProtectedRoute>} />
+            <Route path="/dashboard/admin/in-progress" element={<ProtectedRoute allowedRoles={["admin"]}><AdminInProgressComplaints /></ProtectedRoute>} />
+            <Route path="/dashboard/admin/completed" element={<ProtectedRoute allowedRoles={["admin"]}><AdminCompletedComplaints /></ProtectedRoute>} />
+            <Route path="/dashboard/admin/users" element={<ProtectedRoute allowedRoles={["admin"]}><AdminUserManagement /></ProtectedRoute>} />
+            <Route path="/dashboard/inventory" element={<ProtectedRoute allowedRoles={["admin", "principal", "hod", "maintenance_staff"]}><Inventory /></ProtectedRoute>} />
+            <Route path="/dashboard/calendar" element={<ProtectedRoute allowedRoles={["admin", "principal", "hod", "maintenance_staff", "faculty"]}><CalendarView /></ProtectedRoute>} />
+
+            {/* Catch-all */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </main>
+      </Suspense>
+    </ErrorBoundary>
+  );
 };
 
 export default AppRoutes;

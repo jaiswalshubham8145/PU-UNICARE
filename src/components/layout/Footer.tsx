@@ -113,9 +113,11 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-white/10 mt-16 pt-10 flex flex-col md:flex-row justify-between items-center gap-6">
-          <p className="text-slate-400 text-base">
-            © 2024 UNICARE - Parul University. All rights reserved.
-          </p>
+          <div className="text-slate-400 text-base flex flex-col md:flex-row items-center md:items-start gap-2">
+            <p>© 2024 UNICARE - Parul University. All rights reserved.</p>
+            <span className="hidden md:inline text-slate-600">|</span>
+            <p className="text-violet-300 font-medium">creator:- SHUBHAM JAISWAL</p>
+          </div>
           <div className="flex gap-8">
             <Link to="/policies" className="text-slate-400 hover:text-amber-400 text-base font-medium transition-colors duration-300">
               Privacy Policy

@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Shield, ChevronDown, LogOut, User, Settings } from "lucide-react";
+import { Menu, X, Shield, ChevronDown, LogOut, User, Settings, Package, Calendar } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,22 +9,27 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAuth, getPrimaryDashboard } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
+import { getPrimaryDashboard } from "@/utils/authUtils";
 import NotificationBell from "@/components/notifications/NotificationBell";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
+import { useI18n } from "@/hooks/useI18n";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, roles, signOut, loading } = useAuth();
+  const { t } = useI18n();
 
   const navLinks = [
-    { name: "Home", path: "/" },
-    { name: "About", path: "/about" },
-    { name: "Maintenance", path: "/maintenance" },
-    { name: "Track Complaint", path: "/track" },
-    { name: "Help", path: "/help" },
-    { name: "Contact", path: "/contact" },
+    { name: t('nav.home'), path: "/" },
+    { name: t('nav.about'), path: "/about" },
+    { name: t('nav.maintenance'), path: "/maintenance" },
+    { name: t('nav.track'), path: "/track" },
+    { name: t('nav.help'), path: "/help" },
+    { name: t('nav.contact'), path: "/contact" },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -78,7 +83,9 @@ const Navbar = () => {
           </div>
 
           {/* CTA Buttons */}
-          <div className="hidden lg:flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-2">
+            <LanguageSwitcher />
+            <ThemeToggle />
             {!loading && (
               <>
                 {user && <NotificationBell userId={user.id} />}
@@ -98,19 +105,31 @@ const Navbar = () => {
                     <DropdownMenuContent align="end" className="w-56 glass-panel border-border text-foreground bg-background/95">
                       <DropdownMenuItem asChild className="focus:bg-accent/10 focus:text-primary cursor-pointer">
                         <Link to={getDashboardLink()}>
-                          Dashboard
+                          {t('nav.dashboard')}
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild className="focus:bg-accent/10 focus:text-primary cursor-pointer">
                         <Link to="/profile">
                           <User className="w-4 h-4 mr-2" />
-                          Profile
+                          {t('nav.profile')}
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild className="focus:bg-accent/10 focus:text-primary cursor-pointer">
+                        <Link to="/dashboard/inventory">
+                          <Package className="w-4 h-4 mr-2" />
+                          Inventory
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild className="focus:bg-accent/10 focus:text-primary cursor-pointer">
+                        <Link to="/dashboard/calendar">
+                          <Calendar className="w-4 h-4 mr-2" />
+                          Calendar
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild className="focus:bg-accent/10 focus:text-primary cursor-pointer">
                         <Link to="/settings">
                           <Settings className="w-4 h-4 mr-2" />
-                          Settings
+                          {t('nav.settings')}
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator className="bg-border" />
@@ -119,17 +138,17 @@ const Navbar = () => {
                         className="text-destructive cursor-pointer focus:bg-destructive/10 focus:text-destructive"
                       >
                         <LogOut className="w-4 h-4 mr-2" />
-                        Sign Out
+                        {t('nav.logout')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (
                   <Button variant="ghost" asChild className="text-foreground font-semibold hover:text-primary hover:bg-accent/10">
-                    <Link to="/login">Login</Link>
+                    <Link to="/login">{t('nav.login')}</Link>
                   </Button>
                 )}
                 <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground border-none shadow-lg hover:shadow-primary/30 transition-all rounded-full px-6 font-bold">
-                  <Link to="/register-complaint">Report Issue</Link>
+                  <Link to="/register-complaint">{t('home.hero.cta')}</Link>
                 </Button>
               </>
             )}
@@ -165,7 +184,7 @@ const Navbar = () => {
                   onClick={() => setIsOpen(false)}
                   className="px-4 py-2 rounded-md text-sm font-bold text-muted-foreground hover:bg-accent/10 transition-colors"
                 >
-                  Dashboard
+                  {t('nav.dashboard')}
                 </Link>
               )}
               <div className="flex flex-col gap-2 mt-4 px-4">
@@ -174,18 +193,18 @@ const Navbar = () => {
                     {user ? (
                       <Button variant="outline" onClick={handleSignOut} className="justify-start border-border text-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50">
                         <LogOut className="w-4 h-4 mr-2" />
-                        Sign Out
+                        {t('nav.logout')}
                       </Button>
                     ) : (
                       <Button variant="outline" asChild className="justify-start border-border text-foreground hover:bg-accent/10">
                         <Link to="/login" onClick={() => setIsOpen(false)}>
-                          Login
+                          {t('nav.login')}
                         </Link>
                       </Button>
                     )}
                     <Button asChild className="justify-start bg-primary text-primary-foreground hover:bg-primary/90">
                       <Link to="/register-complaint" onClick={() => setIsOpen(false)}>
-                        Report Issue
+                        {t('home.hero.cta')}
                       </Link>
                     </Button>
                   </>

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,12 +25,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { FileText, Upload, AlertTriangle, MapPin, Building2, Tag, X, Loader2 } from "lucide-react";
+import { FileText, Upload, AlertTriangle, MapPin, Building2, Tag, X, Loader2, QrCode, Mic, MicOff, Camera as CameraIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useDepartments, useCategories, useBuildings, useComplaints } from "@/hooks/useComplaints";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 import { ALLOWED_ROLES_FOR_COMPLAINTS, BUCKETS } from "@/config/constants";
+import SmartCategoryDetector from "@/components/complaints/SmartCategoryDetector";
+import { QRScanner } from "@/components/complaints/QRScanner";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 type ComplaintPriority = Database['public']['Enums']['complaint_priority'];
 
@@ -61,9 +64,34 @@ const RegisterComplaint = () => {
   const { data: buildings, isLoading: loadingBuildings } = useBuildings();
   const { submitComplaint } = useComplaints();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
+  
+  // New States
+  const [showQRScanner, setShowQRScanner] = useState(false);
+  const [coords, setCoords] = useState<{ latitude?: number; longitude?: number }>({});
+  const [isRecording, setIsRecording] = useState(false);
+
+  // Capture Geolocation on load
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCoords({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+          console.log("GPS Location acquired:", position.coords.latitude, position.coords.longitude);
+        },
+        (err) => {
+          console.log("GPS Geolocation failed/denied:", err.message);
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+  }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -118,10 +146,83 @@ const RegisterComplaint = () => {
     return urls;
   };
 
+  // QR Scan Handling
+  const handleQRScanSuccess = (decodedText: string) => {
+    try {
+      const data = JSON.parse(decodedText);
+      if (data.building) {
+        const match = buildings?.find(b => b.id === data.building || b.name.toLowerCase() === data.building.toLowerCase());
+        if (match) form.setValue("building", match.id);
+      }
+      if (data.department) {
+        const match = departments?.find(d => d.id === data.department || d.name.toLowerCase() === data.department.toLowerCase());
+        if (match) form.setValue("department", match.id);
+      }
+      if (data.category) {
+        const match = categories?.find(c => c.id === data.category || c.name.toLowerCase() === data.category.toLowerCase());
+        if (match) form.setValue("category", match.id);
+      }
+      if (data.location) {
+        form.setValue("location", data.location);
+      }
+      toast.success("Asset details populated from QR code!");
+      setShowQRScanner(false);
+    } catch (err) {
+      toast.error("Invalid QR Code payload. Make sure it contains asset JSON.");
+    }
+  };
+
+  // Voice Input Speech recognition
+  const toggleSpeechRecognition = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error("Voice input (Speech Recognition) is not supported in this browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-IN"; // English (India)
+
+    recognition.onstart = () => {
+      setIsRecording(true);
+      toast("Listening... Speak now.");
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error("Speech recognition error", event.error);
+      setIsRecording(false);
+      if (event.error === 'not-allowed' || event.error === 'audio-capture') {
+        toast.error("Microphone access denied. Please allow microphone permissions or ensure you are on a secure (HTTPS) connection.");
+      } else {
+        toast.error(`Speech recognition failed: ${event.error}`);
+      }
+    };
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      const currentDescription = form.getValues("description") || "";
+      form.setValue("description", currentDescription ? `${currentDescription} ${transcript}` : transcript);
+      toast.success("Voice transcript appended to description!");
+    };
+
+    recognition.start();
+  };
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!user) {
       toast.error("Please login to submit a complaint");
       navigate("/login");
+      return;
+    }
+
+    if (files.length === 0) {
+      toast.error("Photo/Video evidence is required to register a complaint.");
       return;
     }
 
@@ -139,7 +240,7 @@ const RegisterComplaint = () => {
       // Upload files first
       const imageUrls = await uploadFiles();
 
-      // Submit complaint
+      // Submit complaint with optional Geolocation lat/lng
       const result = await submitComplaint.mutateAsync({
         title: values.title || `${categories?.find(c => c.id === values.category)?.name} Issue`,
         description: values.description,
@@ -149,6 +250,8 @@ const RegisterComplaint = () => {
         priority: values.priority,
         building_id: values.building,
         image_urls: imageUrls.length > 0 ? imageUrls : undefined,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
       });
 
       toast.success("Complaint registered successfully!", {
@@ -210,6 +313,19 @@ const RegisterComplaint = () => {
 
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  {/* Scan QR Button */}
+                  <div className="flex justify-end mb-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex items-center gap-2 border-accent text-accent hover:bg-accent/10"
+                      onClick={() => setShowQRScanner(true)}
+                    >
+                      <QrCode className="w-4 h-4" />
+                      Scan Asset QR Code
+                    </Button>
+                  </div>
+
                   {/* Title */}
                   <FormField
                     control={form.control}
@@ -368,32 +484,72 @@ const RegisterComplaint = () => {
                   </div>
 
                   {/* Description */}
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <FileText className="w-4 h-4 text-accent" />
-                          Issue Description *
-                        </FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Describe the maintenance issue in detail..."
-                            rows={5}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-accent" />
+                            Issue Description *
+                          </FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Textarea
+                                placeholder="Describe the maintenance issue in detail..."
+                                rows={5}
+                                {...field}
+                                className="pr-12"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className={`absolute right-2 bottom-2 ${isRecording ? 'text-destructive animate-pulse' : 'text-muted-foreground'}`}
+                                onClick={toggleSpeechRecognition}
+                                title="Dictate Description"
+                              >
+                                {isRecording ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
+                              </Button>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* AI Suggestions */}
+                    <SmartCategoryDetector
+                      description={form.watch('description')}
+                      onCategorySelect={(catId) => {
+                        // Find category ID by name/id since the detector uses slug
+                        // But categories in DB have UUIDs.
+                        // Map the detector slug to UUID
+                        const category = categories?.find(c =>
+                          c.name.toLowerCase().includes(catId.replace('_', ' ')) ||
+                          catId.includes(c.name.toLowerCase().replace(' ', '_'))
+                        );
+                        if (category) {
+                          form.setValue('category', category.id);
+                          toast.success(`Category suggested: ${category.name}`);
+                        }
+                      }}
+                      onPrioritySelect={(priority) => {
+                        form.setValue('priority', priority as "critical" | "high" | "medium" | "low");
+                        toast.success(`Priority suggested: ${priority}`);
+                      }}
+                      onTitleSuggestion={(title) => {
+                        form.setValue('title', title);
+                      }}
+                    />
+                  </div>
 
                   {/* File Upload */}
                   <div>
                     <Label className="flex items-center gap-2 mb-2">
                       <Upload className="w-4 h-4 text-accent" />
-                      Photo/Video Evidence (Optional)
+                      Photo/Video Evidence *
                     </Label>
                     <input
                       ref={fileInputRef}
@@ -403,17 +559,33 @@ const RegisterComplaint = () => {
                       onChange={handleFileChange}
                       className="hidden"
                     />
-                    <div
-                      onClick={() => fileInputRef.current?.click()}
-                      className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-accent/50 transition-colors cursor-pointer"
-                    >
-                      <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground text-sm">
-                        Click to browse or drag & drop files
-                      </p>
-                      <p className="text-muted-foreground text-xs mt-2">
-                        Supports: JPG, PNG, MP4 (Max 10MB each, up to 5 files)
-                      </p>
+                    <input
+                      ref={cameraInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      multiple
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div
+                        onClick={() => fileInputRef.current?.click()}
+                        className="border-2 border-dashed border-border rounded-xl p-6 text-center hover:border-accent/50 transition-colors cursor-pointer flex flex-col items-center justify-center"
+                      >
+                        <Upload className="w-8 h-8 text-muted-foreground mb-3" />
+                        <p className="text-foreground text-sm font-medium">Browse Files</p>
+                        <p className="text-muted-foreground text-xs mt-1">Images & Videos</p>
+                      </div>
+                      
+                      <div
+                        onClick={() => cameraInputRef.current?.click()}
+                        className="border-2 border-dashed border-border rounded-xl p-6 text-center hover:border-accent/50 transition-colors cursor-pointer flex flex-col items-center justify-center"
+                      >
+                        <CameraIcon className="w-8 h-8 text-muted-foreground mb-3" />
+                        <p className="text-foreground text-sm font-medium">Take Photo</p>
+                        <p className="text-muted-foreground text-xs mt-1">Use Camera</p>
+                      </div>
                     </div>
 
                     {/* File Preview */}
@@ -460,6 +632,18 @@ const RegisterComplaint = () => {
         </section>
       </main>
       <Footer />
+
+      {/* QR Scanner Dialog */}
+      <Dialog open={showQRScanner} onOpenChange={setShowQRScanner}>
+        <DialogContent className="sm:max-w-md p-0 border-none bg-transparent shadow-none">
+          {showQRScanner && (
+            <QRScanner
+              onScanSuccess={handleQRScanSuccess}
+              onClose={() => setShowQRScanner(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

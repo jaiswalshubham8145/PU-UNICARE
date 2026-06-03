@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Database } from "@/integrations/supabase/types";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export type ChatMessage = Database["public"]["Tables"]["chat_messages"]["Row"];
 export type ChatConversation = Database["public"]["Tables"]["chat_conversations"]["Row"];
@@ -20,84 +21,49 @@ export const useChatbot = (userId: string | undefined) => {
 
     // Advanced AI Logic with Data Access
     const generateSmartResponse = async (userMessage: string): Promise<string> => {
-        const msg = userMessage.toLowerCase();
-
-        // Simulate thinking network delay
-        await new Promise(resolve => setTimeout(resolve, 1500));
-
-        // 1. Capabilities / Help
-        if (msg.includes("what can you do") || msg.includes("help") || msg.includes("who are you")) {
-            return "I am the UNICARE Assistant. I can help you with:\n\n" +
-                "• Registering new complaints (try 'how to register')\n" +
-                "• Checking complaint status (try 'status of #123')\n" +
-                "• Finding incomplete or pending complaints (try 'my pending complaints')\n" +
-                "• Explaining SLAs and Priorities\n" +
-                "• Navigating the system";
-        }
-
-        // 2. Navigation
-        if (msg.includes("navigate") || msg.includes("go to")) {
-            if (msg.includes("register") || msg.includes("file")) return "You can file a complaint by clicking 'Report Issue' in the menu or going to /register-complaint.";
-            if (msg.includes("track")) return "Visit the Tracking page at /track to see live updates.";
-            if (msg.includes("dashboard")) return "Your Dashboard is available in the menu (based on your role).";
-            return "I can help you navigate. Try asking 'where is the contact page?' or 'how to register'.";
-        }
-
-        // 3. User Data Queries (Real Database Access)
-        if (userId) {
-            // "My Complaints" / "Pending"
-            if (msg.includes("pending") || msg.includes("incomplete") || msg.includes("open")) {
-                const { count, error } = await supabase
-                    .from("complaints")
-                    .select("*", { count: 'exact', head: true })
-                    .eq("submitted_by", userId)
-                    .in("status", ["pending", "in_progress", "acknowledged", "approved"]);
-
-                if (error) return "I had trouble checking your complaints. Please try again later.";
-
-                if (count === 0) return "You have no pending complaints at the moment. Great job!";
-                return `You currently have ${count} pending or active complaints. You can view them on your Dashboard or the Track page.`;
-            }
-
-            // "Status of #..."
-            // Extract number pattern if simple (e.g. "status of 1001" or just "1001")
-            // This is complex to regex robustly, but let's try a simple check for "details of last"
-            if (msg.includes("last complaint") || msg.includes("latest")) {
+        try {
+            // First, let's fetch some context from the database if user is logged in
+            let userContext = "";
+            if (userId) {
                 const { data, error } = await supabase
                     .from("complaints")
                     .select("complaint_number, status, title")
                     .eq("submitted_by", userId)
                     .order("created_at", { ascending: false })
-                    .limit(1)
-                    .single();
+                    .limit(5);
 
-                if (data) {
-                    return `Your latest complaint (#${data.complaint_number}) about '${data.title}' is currently '${data.status.replace('_', ' ')}'.`;
+                if (data && data.length > 0) {
+                    userContext = `\nThe user's recent complaints are:\n` + data.map(c => `- #${c.complaint_number}: ${c.title} (Status: ${c.status})`).join("\n");
                 } else {
-                    return "You haven't submitted any complaints yet.";
+                    userContext = `\nThe user has no recent complaints.`;
                 }
             }
-        }
 
-        // 4. How-To / Knowledge
-        if (msg.includes("register") || msg.includes("create") || msg.includes("new complaint")) {
-            return "To register a complaint:\n1. Go to 'Report Issue'.\n2. Fill in the details (Location, Category).\n3. Upload a photo if improved clarity is needed.\n4. Submit!";
-        }
+            const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+            if (!apiKey) {
+                console.warn("Gemini API key is missing. Using fallback response.");
+                return "I am currently undergoing maintenance and cannot access my AI brain. Please try again later or use the standard navigation menus.";
+            }
 
-        if (msg.includes("sla") || msg.includes("time") || msg.includes("long")) {
-            return "Our SLAs (Service Level Agreements) depend on priority:\n• Critical: 24 hours\n• High: 48 hours\n• Medium: 3 days\n• Low: 1 week.\nIf breached, it escalates automatically.";
-        }
+            const genAI = new GoogleGenerativeAI(apiKey);
+            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-        if (msg.includes("contact") || msg.includes("support")) {
-            return "You can reach the maintenance office at contact@unicare.pu.edu or visit the 'Contact' page.";
-        }
+            const systemPrompt = `You are the UNICARE Assistant, an AI facility management chatbot for Parul University (PU).
+Your job is to help users file complaints, check their complaint status, and understand the system.
+Keep your answers brief, friendly, and helpful. Use markdown for formatting.
+If they want to file a complaint, tell them to go to '/register-complaint'.
+If they want to track a complaint, tell them to go to '/track'.
+${userContext}
 
-        // 5. General / Fallback
-        if (msg.includes("hello") || msg.includes("hi") || msg.includes("hey")) {
-            return `Hello${userId ? '' : ' there'}! How can I assist you with facility management today?`;
-        }
+User Message: ${userMessage}`;
 
-        return "I'm not sure I understand that completely. Try asking about 'my pending complaints', 'how to register', or 'system features'.";
+            const result = await model.generateContent(systemPrompt);
+            const response = await result.response;
+            return response.text();
+        } catch (error) {
+            console.error("Error generating AI response:", error);
+            return "I encountered an error connecting to my AI brain. Please try again later.";
+        }
     };
 
     // Fetch active conversation messages

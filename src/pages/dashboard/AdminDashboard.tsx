@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useComplaints, useComplaintStats, useDepartments, useCategories } from "@/hooks/useComplaints";
 import { useRealtimeComplaints } from "@/hooks/useRealtimeComplaints";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
 import { toast } from "sonner";
@@ -17,6 +18,9 @@ import ComplaintDetailsModal from "@/components/complaints/ComplaintDetailsModal
 import AssignStaffModal from "@/components/complaints/AssignStaffModal";
 import DepartmentManagement from "@/components/admins/DepartmentManagement";
 import SLAConfiguration from "@/components/admins/SLAConfiguration";
+import { PredictiveAnalyticsWidget } from "@/components/dashboard/PredictiveAnalyticsWidget";
+import { CampusHeatmap } from "@/components/dashboard/CampusHeatmap";
+import { BulkImportModal } from "@/components/dashboard/BulkImportModal";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -27,6 +31,7 @@ type ComplaintWithJoins = Database['public']['Tables']['complaints']['Row'] & {
 };
 
 const AdminDashboard = () => {
+  const { user } = useAuth();
   const { allComplaints, loadingAllComplaints } = useComplaints();
   const { data: stats, isLoading: loadingStats } = useComplaintStats();
   const { data: departments } = useDepartments();
@@ -164,11 +169,8 @@ const AdminDashboard = () => {
               <p className="text-muted-foreground">University Maintenance Cell - Complete Control</p>
             </div>
             <div className="flex gap-3 flex-wrap">
-              <ReportDownloadButton data={allComplaints || []} userRole="Admin" />
-              <Button variant="outline" onClick={handleExport}>
-                <Download className="w-4 h-4 mr-2" />
-                Export PDF
-              </Button>
+              <BulkImportModal />
+              <ReportDownloadButton data={allComplaints || []} userRole="Admin" userName={user?.email || "Administrator"} />
               <Button variant="outline" asChild>
                 <Link to="/dashboard/admin/users">
                   <UserCog className="w-4 h-4 mr-2" />
@@ -370,6 +372,16 @@ const AdminDashboard = () => {
                     No category data available
                   </div>
                 )}
+              </div>
+
+              {/* Phase 2: Analytics & Map */}
+              <div className="grid lg:grid-cols-3 gap-6 mt-6">
+                <div className="lg:col-span-2">
+                  <CampusHeatmap />
+                </div>
+                <div>
+                  <PredictiveAnalyticsWidget />
+                </div>
               </div>
             </TabsContent>
 

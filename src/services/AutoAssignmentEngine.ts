@@ -6,6 +6,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { sendComplaintEmail, ComplaintEmailData, getComplaintForEmail } from './emailService';
 
 export interface StaffSkill {
     id: string;
@@ -86,12 +87,27 @@ class AutoAssignmentEngine {
      * Find the best available staff for a complaint
      */
     async findBestStaff(
-        categoryId: string,
+        categoryId: string | null,
         departmentId: string,
         priority: string = 'medium',
         buildingLocation?: { lat: number; lng: number }
     ): Promise<StaffCandidate[]> {
-        // Get all maintenance staff in the department
+        // 1. Get maintenance staff in the specific department
+        let staffIds = await this.getMaintenanceStaffIds(departmentId);
+
+        // 2. FALLBACK: If no staff in department, get ALL maintenance staff
+        let isFallback = false;
+        if (staffIds.length === 0) {
+            console.warn(`No maintenance staff found in department ${departmentId}. Falling back to all departments.`);
+            staffIds = await this.getAllMaintenanceStaffIds();
+            isFallback = true;
+        }
+
+        if (staffIds.length === 0) {
+            console.error('No maintenance staff found in the entire system!');
+            return [];
+        }
+
         const { data: staffProfiles, error: profileError } = await supabase
             .from('profiles')
             .select(`
@@ -101,20 +117,23 @@ class AutoAssignmentEngine {
         phone,
         avatar_url
       `)
-            .in('user_id',
-                await this.getMaintenanceStaffIds(departmentId)
-            );
+            .in('user_id', staffIds);
 
         if (profileError) {
             console.error('Error fetching staff profiles:', profileError);
             return [];
         }
 
-        // Get skills for all staff
-        const { data: allSkills } = await supabase
+        // Get skills for all staff (only filter by category if categoryId is provided)
+        let skillsQuery = supabase
             .from('staff_skills')
-            .select('*')
-            .eq('category_id', categoryId);
+            .select('*');
+
+        if (categoryId) {
+            skillsQuery = skillsQuery.eq('category_id', categoryId);
+        }
+
+        const { data: allSkills } = await skillsQuery;
 
         // Get availability for all staff
         const { data: allAvailability } = await supabase
@@ -127,7 +146,8 @@ class AutoAssignmentEngine {
             const skills = allSkills?.filter(s => s.user_id === profile.user_id) || [];
             const availability = allAvailability?.find(a => a.user_id === profile.user_id);
 
-            // Skip if not available
+            // Skip if explicitly not available (on_leave or offline)
+            // If no availability record exists, treat them as available
             if (availability && availability.status !== 'available' && availability.status !== 'busy') {
                 continue;
             }
@@ -141,19 +161,24 @@ class AutoAssignmentEngine {
             }
 
             // Calculate skill score
-            const relevantSkill = skills.find(s => s.category_id === categoryId);
             let skillScore = 0;
-            if (relevantSkill) {
-                skillScore = relevantSkill.proficiency_level / 5; // Normalize to 0-1
-                if (relevantSkill.proficiency_level < this.config.minSkillLevel) {
-                    continue; // Skip if below minimum skill level
+            if (categoryId) {
+                const relevantSkill = skills.find(s => s.category_id === categoryId);
+                if (relevantSkill) {
+                    skillScore = relevantSkill.proficiency_level / 5; // Normalize to 0-1
+                    if (relevantSkill.proficiency_level < this.config.minSkillLevel) {
+                        continue; // Skip if below minimum skill level
+                    }
+                    if (this.config.preferPrimarySkill && !relevantSkill.is_primary) {
+                        skillScore *= 0.5; // Reduce score if not primary skill
+                    }
+                } else if (skills.length === 0) {
+                    // No skills registered - assign base score
+                    skillScore = 0.3;
                 }
-                if (this.config.preferPrimarySkill && !relevantSkill.is_primary) {
-                    skillScore *= 0.5; // Reduce score if not primary skill
-                }
-            } else if (skills.length === 0) {
-                // No skills registered - assign base score
-                skillScore = 0.3;
+            } else {
+                // No category specified - assign base score to all staff
+                skillScore = 0.5;
             }
 
             // Calculate workload score (higher is better - more capacity)
@@ -176,10 +201,15 @@ class AutoAssignmentEngine {
             }
 
             // Calculate total weighted score
-            const totalScore =
+            let totalScore =
                 (skillScore * this.config.skillWeight) +
                 (workloadScore * this.config.workloadWeight) +
                 (proximityScore * this.config.proximityWeight);
+
+            // Apply penalty if it's a fallback (different department)
+            if (isFallback) {
+                totalScore *= 0.7; // 30% penalty for being in a different department
+            }
 
             candidates.push({
                 user_id: profile.user_id,
@@ -232,28 +262,189 @@ class AutoAssignmentEngine {
     }
 
     /**
+     * Get IDs of all maintenance staff in the system
+     */
+    private async getAllMaintenanceStaffIds(): Promise<string[]> {
+        const { data, error } = await supabase
+            .from('user_roles')
+            .select('user_id')
+            .eq('role', 'maintenance_staff');
+
+        if (error) {
+            console.error('Error fetching all maintenance staff:', error);
+            return [];
+        }
+
+        return data?.map(d => d.user_id) || [];
+    }
+
+    /**
      * Auto-assign a complaint to the best available staff
+     */
+    /**
+     * Determine the best assignment before inserting into the database
+     */
+    async determineAssignment(
+        categoryId: string | null,
+        departmentId: string,
+        priority: string = 'medium'
+    ): Promise<{
+        candidate: StaffCandidate;
+        isFallback: boolean;
+        fallbackReasonText: string;
+        candidatesList: StaffCandidate[];
+    } | null> {
+        console.log('[AutoAssign] Starting assignment determination...');
+        console.log('[AutoAssign] Department:', departmentId, '| Category:', categoryId, '| Priority:', priority);
+
+        // 1. Try the scored candidate search (maintenance staff with skills/workload/proximity)
+        const candidates = await this.findBestStaff(categoryId, departmentId, priority);
+        console.log('[AutoAssign] findBestStaff returned', candidates.length, 'candidates');
+
+        if (candidates.length > 0) {
+            const bestCandidate = candidates[0];
+            console.log('[AutoAssign] ✅ Best candidate found:', bestCandidate.full_name, '| Score:', bestCandidate.total_score);
+            return {
+                candidate: bestCandidate,
+                isFallback: false,
+                fallbackReasonText: '',
+                candidatesList: candidates
+            };
+        }
+
+        // 2. Use the SECURITY DEFINER RPC function to find fallback candidates
+        // This bypasses RLS so even students can find HOD/admin for assignment
+        console.log('[AutoAssign] No scored candidates. Using RPC fallback (find_auto_assignment_candidate)...');
+        
+        try {
+            const { data: rpcResult, error: rpcError } = await supabase
+                .rpc('find_auto_assignment_candidate', {
+                    _department_id: departmentId,
+                    _category_id: categoryId
+                });
+
+            if (rpcError) {
+                console.error('[AutoAssign] RPC error:', rpcError.message);
+            }
+
+            if (rpcResult && rpcResult.length > 0) {
+                const fallback = rpcResult[0];
+                console.log('[AutoAssign] ✅ RPC fallback found:', fallback.candidate_name, '| Role:', fallback.candidate_role, '| Reason:', fallback.assignment_reason);
+                
+                const bestCandidate: StaffCandidate = {
+                    user_id: fallback.candidate_user_id,
+                    full_name: fallback.candidate_name || 'System Handler',
+                    email: fallback.candidate_email || '',
+                    phone: '',
+                    avatar_url: '',
+                    skill_score: 0.5,
+                    workload_score: 0.5,
+                    proximity_score: 0.5,
+                    total_score: 0.5,
+                    current_workload: 0,
+                    max_workload: 5,
+                    skills: [],
+                    status: 'available'
+                };
+
+                return {
+                    candidate: bestCandidate,
+                    isFallback: true,
+                    fallbackReasonText: fallback.assignment_reason || `Auto-assigned to ${fallback.candidate_role}`,
+                    candidatesList: []
+                };
+            }
+        } catch (rpcCallError) {
+            console.error('[AutoAssign] RPC call failed:', rpcCallError);
+        }
+
+        // 3. Direct query fallback (for cases where RPC function doesn't exist yet)
+        console.log('[AutoAssign] RPC not available. Trying direct query fallback...');
+        
+        // Try HOD for this department
+        const { data: hodRoles } = await supabase
+            .from('user_roles')
+            .select('user_id')
+            .eq('role', 'hod')
+            .eq('department_id', departmentId);
+
+        let fallbackUserId: string | null = null;
+        let fallbackReason = 'Auto-assigned to HOD (Fallback: No active maintenance staff)';
+
+        if (hodRoles && hodRoles.length > 0) {
+            fallbackUserId = hodRoles[0].user_id;
+            console.log('[AutoAssign] Found HOD via direct query:', fallbackUserId);
+        } else {
+            // Try any admin or HOD in system
+            const { data: anyStaff } = await supabase
+                .from('user_roles')
+                .select('user_id, role')
+                .in('role', ['admin', 'hod'])
+                .limit(1);
+            if (anyStaff && anyStaff.length > 0) {
+                fallbackUserId = anyStaff[0].user_id;
+                fallbackReason = `Auto-assigned to ${anyStaff[0].role.toUpperCase()} (Fallback)`;
+                console.log('[AutoAssign] Found admin/HOD via direct query:', fallbackUserId);
+            } else {
+                console.log('[AutoAssign] No HOD/admin found via direct query either');
+            }
+        }
+
+        if (fallbackUserId) {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('full_name, email, phone, avatar_url')
+                .eq('user_id', fallbackUserId)
+                .single();
+
+            const bestCandidate: StaffCandidate = {
+                user_id: fallbackUserId,
+                full_name: profile?.full_name || 'System Handler',
+                email: profile?.email || '',
+                phone: profile?.phone || '',
+                avatar_url: profile?.avatar_url || '',
+                skill_score: 0.5,
+                workload_score: 0.5,
+                proximity_score: 0.5,
+                total_score: 0.5,
+                current_workload: 0,
+                max_workload: 5,
+                skills: [],
+                status: 'available'
+            };
+
+            return {
+                candidate: bestCandidate,
+                isFallback: true,
+                fallbackReasonText: fallbackReason,
+                candidatesList: []
+            };
+        }
+
+        console.warn('[AutoAssign] ❌ No candidates found at any level. Complaint will remain pending.');
+        return null;
+    }
+
+    /**
+     * Auto-assign a complaint to the best available staff (Legacy/Update method)
      */
     async autoAssign(
         complaintId: string,
-        categoryId: string,
+        categoryId: string | null,
         departmentId: string,
         priority: string = 'medium'
     ): Promise<AssignmentLog | null> {
-        const candidates = await this.findBestStaff(categoryId, departmentId, priority);
+        const assignmentDetails = await this.determineAssignment(categoryId, departmentId, priority);
+        if (!assignmentDetails) return null;
 
-        if (candidates.length === 0) {
-            console.warn('No available staff found for auto-assignment');
-            return null;
-        }
-
-        const bestCandidate = candidates[0];
+        const { candidate: bestCandidate, isFallback: isFallbackAssignment, fallbackReasonText, candidatesList: candidates } = assignmentDetails;
 
         // Assign the complaint
         const { error: updateError } = await supabase
             .from('complaints')
             .update({
                 assigned_to: bestCandidate.user_id,
+                approved_by: bestCandidate.user_id,
                 status: 'approved',
                 is_auto_assigned: true,
                 updated_at: new Date().toISOString()
@@ -265,11 +456,26 @@ class AutoAssignmentEngine {
             throw updateError;
         }
 
+        // Log the status change in complaint_updates
+        const { error: updateLogError } = await supabase
+            .from('complaint_updates')
+            .insert({
+                complaint_id: complaintId,
+                status: 'approved',
+                updated_by: bestCandidate.user_id,
+                note: `Auto-assigned to ${bestCandidate.full_name}. ${isFallbackAssignment ? fallbackReasonText : this.getAssignmentReason(bestCandidate)}`,
+            });
+
+        if (updateLogError) {
+            console.warn('Error logging complaint update (non-fatal):', updateLogError.message);
+        }
+
         // Log the assignment
+        const assignmentReason = isFallbackAssignment ? fallbackReasonText : this.getAssignmentReason(bestCandidate);
         const assignmentLog: AssignmentLog = {
             complaint_id: complaintId,
             assigned_to_user_id: bestCandidate.user_id,
-            assignment_reason: this.getAssignmentReason(bestCandidate),
+            assignment_reason: assignmentReason,
             skill_match_score: bestCandidate.skill_score,
             workload_score: bestCandidate.workload_score,
             proximity_score: bestCandidate.proximity_score,
@@ -291,11 +497,68 @@ class AutoAssignmentEngine {
             });
 
         if (logError) {
-            console.error('Error logging assignment:', logError);
+            // Log error but don't fail the assignment
+            console.warn('Error logging assignment (non-fatal):', logError.message);
         }
 
         // Create notification for assigned staff
         await this.notifyAssignment(complaintId, bestCandidate.user_id);
+
+        // Send email notification for auto-assignment
+        await this.sendAssignmentEmail(complaintId, bestCandidate.user_id, assignmentLog.assignment_reason);
+
+        return assignmentLog;
+    }
+
+    /**
+     * Log and notify about an assignment (split from autoAssign)
+     */
+    async logAndNotifyAssignment(
+        complaintId: string,
+        assignmentDetails: {
+            candidate: StaffCandidate;
+            isFallback: boolean;
+            fallbackReasonText: string;
+            candidatesList: StaffCandidate[];
+        }
+    ): Promise<AssignmentLog> {
+        const { candidate: bestCandidate, isFallback: isFallbackAssignment, fallbackReasonText, candidatesList: candidates } = assignmentDetails;
+        
+        // Log the assignment
+        const assignmentReason = isFallbackAssignment ? fallbackReasonText : this.getAssignmentReason(bestCandidate);
+        const assignmentLog: AssignmentLog = {
+            complaint_id: complaintId,
+            assigned_to_user_id: bestCandidate.user_id,
+            assignment_reason: assignmentReason,
+            skill_match_score: bestCandidate.skill_score,
+            workload_score: bestCandidate.workload_score,
+            proximity_score: bestCandidate.proximity_score,
+            total_score: bestCandidate.total_score,
+            candidates_considered: candidates.slice(0, 5) // Top 5 candidates
+        };
+
+        const { error: logError } = await supabase
+            .from('auto_assignment_logs')
+            .insert({
+                complaint_id: assignmentLog.complaint_id,
+                assigned_to_user_id: assignmentLog.assigned_to_user_id,
+                assignment_reason: assignmentLog.assignment_reason,
+                skill_match_score: assignmentLog.skill_match_score,
+                workload_score: assignmentLog.workload_score,
+                proximity_score: assignmentLog.proximity_score,
+                total_score: assignmentLog.total_score,
+                candidates_considered: JSON.stringify(assignmentLog.candidates_considered)
+            });
+
+        if (logError) {
+            console.warn('Error logging assignment (non-fatal):', logError.message);
+        }
+
+        // Create notification for assigned staff
+        await this.notifyAssignment(complaintId, bestCandidate.user_id);
+
+        // Send email notification for auto-assignment
+        await this.sendAssignmentEmail(complaintId, bestCandidate.user_id, assignmentLog.assignment_reason);
 
         return assignmentLog;
     }
@@ -348,12 +611,54 @@ class AutoAssignmentEngine {
 
         await supabase.from('notifications').insert({
             user_id: userId,
-            type: 'info',
+            type: 'complaint_assigned',
             title: `${priorityEmoji} New Task Assigned`,
             message: `You have been assigned a new ${complaint.priority} priority task: "${complaint.title}"`,
             related_complaint_id: complaintId,
             link: `/dashboard/maintenance/new-assigned`
         });
+    }
+
+    /**
+     * Send email notification for auto-assignment
+     */
+    private async sendAssignmentEmail(complaintId: string, assignedUserId: string, reason: string): Promise<void> {
+        try {
+            const complaintData = await getComplaintForEmail(complaintId);
+            if (!complaintData) return;
+
+            // Get assigned staff profile
+            const { data: assigneeProfile } = await supabase
+                .from('profiles')
+                .select('email, full_name')
+                .eq('user_id', assignedUserId)
+                .single();
+
+            if (!assigneeProfile?.email) return;
+
+            const emailData: ComplaintEmailData = {
+                id: complaintData.id,
+                complaint_number: complaintData.complaint_number,
+                title: complaintData.title,
+                description: complaintData.description,
+                priority: complaintData.priority,
+                status: complaintData.status,
+                location: complaintData.location,
+                department_id: complaintData.department_id,
+                submitted_by: complaintData.submitted_by,
+                assigned_to: assignedUserId,
+                category_name: complaintData.category_name,
+                department_name: complaintData.department_name,
+            };
+
+            await sendComplaintEmail('assignment', emailData, {
+                assigneeName: assigneeProfile.full_name,
+                note: `Auto-assigned: ${reason}`,
+            });
+        } catch (error) {
+            // Non-fatal: log but don't fail the assignment
+            console.error('Failed to send auto-assignment email:', error);
+        }
     }
 
     /**
@@ -465,6 +770,46 @@ class AutoAssignmentEngine {
         }
 
         return stats;
+    }
+
+    /**
+     * Bulk auto-assign multiple complaints
+     */
+    async bulkAutoAssign(complaints: {
+        id: string;
+        category_id: string | null;
+        department_id: string;
+        priority: string;
+    }[]): Promise<{
+        successful: string[];
+        failed: string[];
+    }> {
+        const results = {
+            successful: [] as string[],
+            failed: [] as string[]
+        };
+
+        for (const complaint of complaints) {
+            try {
+                const result = await this.autoAssign(
+                    complaint.id,
+                    complaint.category_id,
+                    complaint.department_id,
+                    complaint.priority
+                );
+
+                if (result) {
+                    results.successful.push(complaint.id);
+                } else {
+                    results.failed.push(complaint.id);
+                }
+            } catch (error) {
+                console.error(`Bulk assignment failed for ${complaint.id}:`, error);
+                results.failed.push(complaint.id);
+            }
+        }
+
+        return results;
     }
 }
 

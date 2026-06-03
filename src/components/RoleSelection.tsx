@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, Users, Wrench, GraduationCap, UserCheck, Crown } from "lucide-react";
-import { getPrimaryDashboard } from "@/hooks/useAuth";
+import { getPrimaryDashboard } from "@/utils/authUtils";
 import type { Database } from "@/integrations/supabase/types";
 
 type AppRole = Database['public']['Enums']['app_role'];

@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import type { Database } from "@/integrations/supabase/types";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 
 export interface ExportComplaint {
   complaint_number?: string | null;
@@ -109,4 +110,28 @@ export const exportToPDF = (data: ExportComplaint[], filename: string, title: st
 
   // Save
   doc.save(`${filename}-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+};
+
+export const exportToExcel = (data: ExportComplaint[], filename: string) => {
+  if (!data || data.length === 0) return;
+
+  const excelData = data.map(item => ({
+    "Complaint Number": item.complaint_number || "",
+    "Title": item.title || "",
+    "Description": item.description || "",
+    "Department": item.departments?.name || item.department_name || "",
+    "Category": item.maintenance_categories?.name || item.category_name || "",
+    "Location": item.location || "",
+    "Priority": item.priority || "",
+    "Status": item.status || "",
+    "Submitted Date": item.created_at ? format(new Date(item.created_at), "yyyy-MM-dd HH:mm") : "",
+    "Expected Resolution": item.expected_resolution ? format(new Date(item.expected_resolution), "yyyy-MM-dd") : "",
+    "Resolved Date": item.resolved_at ? format(new Date(item.resolved_at), "yyyy-MM-dd HH:mm") : "",
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(excelData);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Complaints");
+  
+  XLSX.writeFile(workbook, `${filename}-${format(new Date(), "yyyy-MM-dd")}.xlsx`);
 };

@@ -6,6 +6,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { sendComplaintEmail, getComplaintForEmail } from './emailService';
 
 export interface EscalationRule {
     id: string;
@@ -164,7 +165,7 @@ class EscalationService {
                     current_level: complaint.escalation_level || 0,
                     hours_pending: Math.round(hoursPending),
                     should_escalate_to: applicableRule.escalate_to_role,
-                    department_name: (complaint.departments as any)?.name || 'Unknown'
+                    department_name: (complaint.departments as unknown as { name: string })?.name || 'Unknown'
                 });
             }
         }
@@ -317,6 +318,19 @@ class EscalationService {
                 related_complaint_id: complaintId,
                 link: `/track?number=${complaint.complaint_number}`
             });
+        }
+
+        // Trigger Email Notification
+        try {
+            const complaintForEmail = await getComplaintForEmail(complaintId);
+            if (complaintForEmail) {
+                await sendComplaintEmail('escalated', complaintForEmail, {
+                    escalationLevel: level,
+                    escalationReason: `Automatic escalation to level ${level}`
+                });
+            }
+        } catch (emailError) {
+            console.error('Failed to send escalation email:', emailError);
         }
     }
 

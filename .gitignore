@@ -39,3 +39,11 @@ ngrok*.zip
 
 # System files
 .gemini/
+
+# Project temporary / test files
+supabase/.temp/
+temp_docx/
+test-*.pdf
+test-auto-assign.ts
+test-db.ts
+build_output.txt

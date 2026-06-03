@@ -3,6 +3,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 import { TABLES } from "@/config/constants";
+import { isUniversityEmail, getUniversityEmailError } from "@/lib/emailValidation";
 
 type AppRole = Database['public']['Enums']['app_role'];
 
@@ -72,11 +73,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    // Validate university email domain
+    if (!isUniversityEmail(email)) {
+      return { error: new Error(getUniversityEmailError()) };
+    }
+
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error: error as Error | null };
   };
 
   const signUp = async (email: string, password: string, fullName: string, role: AppRole) => {
+    // Validate university email domain
+    if (!isUniversityEmail(email)) {
+      return { error: new Error(getUniversityEmailError()) };
+    }
+
     const redirectUrl = `${window.location.origin}/`;
 
     const { data, error } = await supabase.auth.signUp({
@@ -133,12 +144,4 @@ export const useAuth = () => {
   return context;
 };
 
-export const getPrimaryDashboard = (roles: AppRole[]): string => {
-  if (roles.includes('admin')) return '/dashboard/admin';
-  if (roles.includes('principal')) return '/dashboard/principal';
-  if (roles.includes('hod')) return '/dashboard/hod';
-  if (roles.includes('maintenance_staff')) return '/dashboard/maintenance';
-  if (roles.includes('cr')) return '/dashboard/cr';
-  if (roles.includes('faculty')) return '/dashboard/faculty';
-  return '/dashboard/faculty';
-};
+

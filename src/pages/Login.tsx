@@ -7,11 +7,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { Shield, Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { useAuth, getPrimaryDashboard } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
+import { getPrimaryDashboard } from "@/utils/authUtils";
+import { useI18n } from "@/hooks/useI18n";
 import { z } from "zod";
 import { RoleSelection } from "@/components/RoleSelection";
 import type { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
+import { isUniversityEmail, getUniversityEmailError } from "@/lib/emailValidation";
 
 type AppRole = Database['public']['Enums']['app_role'];
 
@@ -44,6 +47,7 @@ const Login = () => {
   const [showResend, setShowResend] = useState(false);
 
   const { signIn, signUp, user, roles, loading, setActiveRole } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -104,6 +108,13 @@ const Login = () => {
     setShowResend(false);
 
     try {
+      // Validate university email domain
+      if (!isUniversityEmail(email)) {
+        toast.error(getUniversityEmailError());
+        setIsLoading(false);
+        return;
+      }
+
       if (isSignUp) {
         const validation = signupSchema.safeParse({ email, password, confirmPassword, fullName, role });
         if (!validation.success) {
@@ -170,7 +181,7 @@ const Login = () => {
                   <Shield className="w-10 h-10 text-white" />
                 </div>
                 <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
-                  {isSignUp ? "Create Account" : "Welcome Back"}
+                  {isSignUp ? t('auth.signup') : t('dashboard.welcome')}
                 </h1>
                 <p className="text-violet-200/80 text-sm tracking-wide">
                   {isSignUp ? "Register for a UNICARE account" : "Sign in to your premium portal"}

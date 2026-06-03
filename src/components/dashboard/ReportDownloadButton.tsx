@@ -12,6 +12,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format, subDays, startOfMonth, startOfYear, isAfter } from "date-fns";
 import { toast } from "sonner";
+import { exportToExcel, ExportComplaint } from "@/lib/exportUtils";
 
 // Define a loose type for flexibility
 interface ComplaintData {
@@ -146,6 +147,38 @@ export const ReportDownloadButton = ({ data, userRole, userName }: ReportDownloa
         }
     };
 
+    const generateExcel = (period: "weekly" | "monthly" | "annually") => {
+        setIsGenerating(true);
+        try {
+            const now = new Date();
+            let startDate = new Date();
+            
+            if (period === "weekly") {
+                startDate = subDays(now, 7);
+            } else if (period === "monthly") {
+                startDate = startOfMonth(now);
+            } else if (period === "annually") {
+                startDate = startOfYear(now);
+            }
+
+            const filteredData = data.filter(item => isAfter(new Date(item.created_at), startDate));
+
+            if (filteredData.length === 0) {
+                toast.error(`No data found for the selected period (${period})`);
+                setIsGenerating(false);
+                return;
+            }
+
+            exportToExcel(filteredData as ExportComplaint[], `${userRole}_Report_${period}`);
+            toast.success("Excel report downloaded successfully");
+        } catch (error) {
+            console.error("Excel Generation Error:", error);
+            toast.error("Failed to generate Excel report");
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -157,15 +190,19 @@ export const ReportDownloadButton = ({ data, userRole, userName }: ReportDownloa
             <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => generatePDF("weekly")}>
                     <FileText className="w-4 h-4 mr-2" />
-                    Weekly Report
+                    Weekly Report (PDF)
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => generatePDF("monthly")}>
                     <FileText className="w-4 h-4 mr-2" />
-                    Monthly Report
+                    Monthly Report (PDF)
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => generatePDF("annually")}>
                     <FileText className="w-4 h-4 mr-2" />
-                    Annual Report
+                    Annual Report (PDF)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => generateExcel("monthly")}>
+                    <FileText className="w-4 h-4 mr-2" />
+                    Monthly Report (Excel)
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

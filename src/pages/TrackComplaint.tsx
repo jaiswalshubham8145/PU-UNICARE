@@ -4,10 +4,11 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Clock, CheckCircle, AlertCircle, Loader2, Calendar, MapPin, User, XCircle, ThumbsUp, Pause, Archive } from "lucide-react";
+import { Search, Clock, CheckCircle, AlertCircle, Loader2, Calendar, MapPin, User, XCircle, ThumbsUp, Pause, Archive, Share2 } from "lucide-react";
 import { useComplaintByNumber } from "@/hooks/useComplaints";
 import { format } from "date-fns";
 import type { Database } from "@/integrations/supabase/types";
+import { toast } from "sonner";
 
 type ComplaintWithJoins = Database['public']['Tables']['complaints']['Row'] & {
   departments: { name: string } | null;
@@ -35,11 +36,17 @@ const TrackComplaint = () => {
 
   useEffect(() => {
     const state = location.state as { complaintNumber?: string } | null;
+    const searchParams = new URLSearchParams(location.search);
+    const idParam = searchParams.get('id');
+
     if (state?.complaintNumber) {
       setSearchId(state.complaintNumber);
       setQueryId(state.complaintNumber);
+    } else if (idParam) {
+      setSearchId(idParam);
+      setQueryId(idParam);
     }
-  }, [location.state]);
+  }, [location.state, location.search]);
 
   const handleSearch = () => {
     if (searchId.trim()) {
@@ -75,6 +82,35 @@ const TrackComplaint = () => {
     }
 
     return history.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  };
+
+  const handleShare = async () => {
+    if (!complaint) return;
+    
+    const url = `${window.location.origin}/track?id=${complaint.complaint_number}`;
+    const title = `Track Complaint: ${complaint.complaint_number}`;
+    const text = `Check the status of complaint "${complaint.title}" on PU Unicare.`;
+
+    if (navigator.share && window.isSecureContext) {
+      try {
+        await navigator.share({
+          title,
+          text,
+          url,
+        });
+        toast.success("Shared successfully!");
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          console.log("Error sharing", error);
+          navigator.clipboard.writeText(url);
+          toast.success("Tracking link copied to clipboard!");
+        }
+      }
+    } else {
+      // Fallback: Copy to clipboard
+      navigator.clipboard.writeText(url);
+      toast.success("Tracking link copied to clipboard!");
+    }
   };
 
   return (
@@ -127,7 +163,12 @@ const TrackComplaint = () => {
                   <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
                     <div>
                       <span className="text-sm text-muted-foreground">Complaint ID</span>
-                      <h2 className="text-2xl font-bold text-foreground">{complaint.complaint_number}</h2>
+                      <div className="flex items-center gap-3">
+                        <h2 className="text-2xl font-bold text-foreground">{complaint.complaint_number}</h2>
+                        <Button variant="outline" size="icon" className="h-8 w-8 rounded-full" onClick={handleShare} title="Share Status">
+                          <Share2 className="w-4 h-4 text-accent" />
+                        </Button>
+                      </div>
                     </div>
                     <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${statusConfig[complaint.status as keyof typeof statusConfig]?.bg || "bg-secondary"}`}>
                       {(() => {

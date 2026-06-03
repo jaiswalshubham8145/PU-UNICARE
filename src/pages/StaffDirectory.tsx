@@ -82,6 +82,14 @@ interface StaffMember {
     completed_tasks: number;
 }
 
+interface StaffAvailabilityRow {
+    user_id: string;
+    status: string;
+    current_workload: number;
+    max_workload: number;
+    last_seen_at: string;
+}
+
 const statusConfig = {
     available: { color: 'bg-green-500', icon: CheckCircle2, label: 'Available', textColor: 'text-green-700' },
     busy: { color: 'bg-yellow-500', icon: Clock4, label: 'Busy', textColor: 'text-yellow-700' },
@@ -299,13 +307,14 @@ export default function StaffDirectory() {
                 .select('id, name');
 
             // Try to get availability (table may not exist yet)
-            let availability: any[] = [];
+            let availability: StaffAvailabilityRow[] = [];
             try {
                 const { data: availData } = await supabase
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     .from('staff_availability' as any)
                     .select('*')
                     .in('user_id', userIds);
-                availability = availData || [];
+                availability = (availData as unknown as StaffAvailabilityRow[]) || [];
             } catch {
                 // Table doesn't exist yet, use empty array
             }
@@ -318,10 +327,10 @@ export default function StaffDirectory() {
                 .in('assigned_to', userIds);
 
             // Combine all data
-            return (profiles || []).map((profile: any) => {
+            return (profiles || []).map((profile) => {
                 const role = staffRoles.find(r => r.user_id === profile.user_id);
                 const dept = depts?.find(d => d.id === role?.department_id);
-                const avail = availability?.find((a: any) => a.user_id === profile.user_id);
+                const avail = availability?.find((a) => a.user_id === profile.user_id);
                 const completionCount = completions?.filter(c => c.assigned_to === profile.user_id).length || 0;
 
                 return {

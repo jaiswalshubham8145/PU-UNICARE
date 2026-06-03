@@ -13,14 +13,14 @@ export const useRealtimeComplaints = () => {
 
     // Determine filter based on role - similar to query logic
     let filter = undefined;
-    if (!roles.includes("admin") && !roles.includes("principal") && !roles.includes("hod")) {
+    if (!roles.includes("admin") && !roles.includes("principal") && !roles.includes("hod") && !roles.includes("maintenance_staff")) {
       // Regular users only see their own updates
       filter = `submitted_by=eq.${user.id}`;
     }
     // HODs, Admins see all (or department specific, but row level security handles the data access, 
     // we just want to avoid unnecessary invalidations for irrelevant events)
-
-    // For now, we subscribe to all if admin/hod, or user specific if student.
+    // Maintenance staff also need to see updates for complaints assigned to them.
+    // For now, we subscribe to all if admin/hod/staff, or user specific if student.
     // Ideally we would filter by department for HOD, but that requires more complex setup.
 
     const channel = supabase

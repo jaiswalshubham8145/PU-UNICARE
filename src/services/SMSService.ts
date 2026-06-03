@@ -11,8 +11,6 @@
  * - TextLocal
  */
 
-import { supabase } from '@/integrations/supabase/client';
-
 export type SMSType =
     | 'complaint_submitted'
     | 'complaint_assigned'
@@ -50,7 +48,7 @@ const smsTemplates: Record<SMSType, (data: SMSData) => string> = {
         `PU Unicare URGENT: ${data.complaintNumber} has been escalated. Immediate attention required.`,
 
     resolved: (data) =>
-        `PU Unicare: Great news! ${data.complaintNumber} has been resolved. Please rate our service.`,
+        `PU Unicare: Great news! ${data.complaintNumber} has been resolved. Please rate our service: pu-unicare.vercel.app/survey?id=${data.complaintNumber}`,
 
     otp: (data) =>
         `Your PU Unicare OTP is ${data.otp}. Valid for 10 minutes. Do not share.`,
@@ -65,12 +63,23 @@ interface SMSConfig {
     senderId?: string;
 }
 
-// Get SMS configuration from environment or database
+// Get SMS configuration from environment
 async function getSMSConfig(): Promise<SMSConfig> {
-    // For now, return 'none' since budget is $0
-    // In future, this could read from environment variables or settings table
+    // Check Vite environment variables first
+    const viteEnv = typeof import.meta !== 'undefined' ? import.meta.env : null;
+    const provider = viteEnv?.VITE_SMS_PROVIDER || 'fast2sms'; // Default to fast2sms for this project
+
+    if (provider === 'none') {
+        return { provider: 'none' };
+    }
+
+    const apiKey = viteEnv?.VITE_FAST2SMS_API_KEY;
+    const senderId = viteEnv?.VITE_SMS_SENDER_ID || "TXTIND";
+
     return {
-        provider: 'none',
+        provider: provider as SMSConfig['provider'],
+        apiKey: apiKey || undefined,
+        senderId: senderId || undefined,
     };
 }
 
@@ -81,36 +90,21 @@ export async function sendSMS(
     data: SMSData
 ): Promise<{ success: boolean; error?: string; queued?: boolean }> {
     const config = await getSMSConfig();
+    const message = smsTemplates[type](data);
 
     if (config.provider === 'none') {
-        // No SMS provider configured - log and queue for later
-        console.log(`[SMS Queue] Would send to ${recipient.phone}: ${smsTemplates[type](data)}`);
-
-        // Store in database for when provider is configured
-        try {
-            await supabase.from('sms_queue' as any).insert({
-                phone: recipient.phone,
-                name: recipient.name,
-                type,
-                message: smsTemplates[type](data),
-                status: 'queued',
-                created_at: new Date().toISOString(),
-            });
-            return { success: true, queued: true };
-        } catch {
-            // Table might not exist yet
-            return { success: true, queued: true };
-        }
+        console.log(`[SMS] No provider configured. Would send to ${recipient.phone}: ${message}`);
+        return { success: true, queued: true };
     }
 
-    // Provider-specific implementations (for future)
+    // Provider-specific implementations
     switch (config.provider) {
         case 'twilio':
-            return sendViaTwilio(recipient.phone, smsTemplates[type](data), config);
+            return sendViaTwilio(recipient.phone, message, config);
         case 'msg91':
-            return sendViaMSG91(recipient.phone, smsTemplates[type](data), config);
+            return sendViaMSG91(recipient.phone, message, config);
         case 'fast2sms':
-            return sendViaFast2SMS(recipient.phone, smsTemplates[type](data), config);
+            return sendViaFast2SMS(recipient.phone, message, config);
         default:
             return { success: false, error: 'No SMS provider configured' };
     }
@@ -122,9 +116,12 @@ async function sendViaTwilio(
     message: string,
     config: SMSConfig
 ): Promise<{ success: boolean; error?: string }> {
-    // Twilio implementation would go here
+    if (!config.apiKey) {
+        return { success: false, error: 'Twilio API key not configured' };
+    }
+    // TODO: Implement Twilio SDK integration
     console.log(`[Twilio] Sending to ${phone}: ${message}`);
-    return { success: false, error: 'Twilio not configured' };
+    return { success: false, error: 'Twilio not yet implemented' };
 }
 
 async function sendViaMSG91(
@@ -132,9 +129,12 @@ async function sendViaMSG91(
     message: string,
     config: SMSConfig
 ): Promise<{ success: boolean; error?: string }> {
-    // MSG91 implementation would go here
+    if (!config.apiKey) {
+        return { success: false, error: 'MSG91 API key not configured' };
+    }
+    // TODO: Implement MSG91 API integration
     console.log(`[MSG91] Sending to ${phone}: ${message}`);
-    return { success: false, error: 'MSG91 not configured' };
+    return { success: false, error: 'MSG91 not yet implemented' };
 }
 
 async function sendViaFast2SMS(
@@ -142,9 +142,41 @@ async function sendViaFast2SMS(
     message: string,
     config: SMSConfig
 ): Promise<{ success: boolean; error?: string }> {
-    // Fast2SMS implementation (Free tier available in India)
-    console.log(`[Fast2SMS] Sending to ${phone}: ${message}`);
-    return { success: false, error: 'Fast2SMS not configured' };
+    if (!config.apiKey) {
+        return { success: false, error: 'Fast2SMS API key not configured' };
+    }
+    
+    try {
+        const url = "https://www.fast2sms.com/dev/bulkV2";
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'authorization': config.apiKey,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                route: "v3",
+                sender_id: config.senderId || "TXTIND",
+                message: message,
+                language: "english",
+                flash: 0,
+                numbers: phone.replace(/\D/g, '').slice(-10), // Clean to 10 digits
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.return) {
+            console.log(`[Fast2SMS] Successfully sent to ${phone}`);
+            return { success: true };
+        } else {
+            console.error("[Fast2SMS] Error:", data);
+            return { success: false, error: data.message || "Failed to send SMS" };
+        }
+    } catch (error: any) {
+        console.error("[Fast2SMS] Failed:", error);
+        return { success: false, error: error.message };
+    }
 }
 
 // Convenience functions
@@ -176,34 +208,16 @@ export async function sendReminderSMS(recipient: SMSRecipient, complaintNumber: 
     return sendSMS(recipient, 'reminder', { complaintNumber });
 }
 
-// Check if SMS is enabled for a user
-export async function isUserSMSEnabled(userId: string): Promise<boolean> {
-    try {
-        const { data } = await supabase
-            .from('sms_preferences' as any)
-            .select('enabled')
-            .eq('user_id', userId)
-            .single();
-
-        return data?.enabled || false;
-    } catch {
-        return false;
-    }
+// Check if SMS is enabled for a user (stub - always returns false until provider configured)
+export async function isUserSMSEnabled(_userId: string): Promise<boolean> {
+    const config = await getSMSConfig();
+    return config.provider !== 'none';
 }
 
-// Update user SMS preference
-export async function updateUserSMSPreference(userId: string, enabled: boolean, phone?: string) {
-    try {
-        await supabase.from('sms_preferences' as any).upsert({
-            user_id: userId,
-            enabled,
-            phone,
-            updated_at: new Date().toISOString(),
-        });
-        return { success: true };
-    } catch (error) {
-        return { success: false, error: String(error) };
-    }
+// Update user SMS preference (stub)
+export async function updateUserSMSPreference(_userId: string, _enabled: boolean, _phone?: string) {
+    console.log('[SMS] SMS preferences require sms_preferences table. Configure via Supabase dashboard.');
+    return { success: true };
 }
 
 export default {

@@ -7,7 +7,8 @@ import {
     Loader2,
     Eye,
     ArrowLeft,
-    Zap
+    Zap,
+    AlertCircle
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useComplaints } from "@/hooks/useComplaints";
@@ -21,7 +22,6 @@ import { Link } from "react-router-dom";
 import type { Database } from "@/integrations/supabase/types";
 import autoAssignmentEngine from "@/services/AutoAssignmentEngine";
 import { useQueryClient } from "@tanstack/react-query";
-import { sendComplaintEmail, ComplaintEmailData } from "@/services/emailService";
 
 type ComplaintWithJoins =
     Database["public"]["Tables"]["complaints"]["Row"] & {
@@ -85,9 +85,10 @@ const HODPendingComplaints = () => {
     const handleAutoAssign = async (complaint: ComplaintWithJoins) => {
         setAutoAssigningId(complaint.id);
         try {
+            // AutoAssignmentEngine handles email notifications internally
             const result = await autoAssignmentEngine.autoAssign(
                 complaint.id,
-                complaint.category_id,
+                complaint.category_id ?? null,
                 complaint.department_id,
                 complaint.priority
             );
@@ -96,29 +97,6 @@ const HODPendingComplaints = () => {
                 toast.success("Complaint auto-assigned successfully!", {
                     description: `Assigned based on: ${result.assignment_reason} (Score: ${result.total_score})`,
                 });
-
-                // Send assignment email
-                try {
-                    const emailData: ComplaintEmailData = {
-                        id: complaint.id,
-                        complaint_number: complaint.complaint_number,
-                        title: complaint.title,
-                        description: complaint.description,
-                        priority: complaint.priority,
-                        status: 'approved',
-                        location: complaint.location,
-                        department_id: complaint.department_id,
-                        submitted_by: complaint.submitted_by,
-                        assigned_to: result.assigned_to_user_id,
-                        department_name: complaint.departments?.name || undefined,
-                        category_name: complaint.maintenance_categories?.name || undefined,
-                    };
-                    sendComplaintEmail("assignment", emailData, {
-                        note: `Auto-assigned: ${result.assignment_reason}`,
-                    }).catch(console.error);
-                } catch (emailErr) {
-                    console.error("Failed to send assignment email:", emailErr);
-                }
 
                 queryClient.invalidateQueries({ queryKey: ["department-complaints"] });
                 queryClient.invalidateQueries({ queryKey: ["all-complaints"] });
@@ -131,6 +109,37 @@ const HODPendingComplaints = () => {
             }
         } catch (error: unknown) {
             toast.error("Auto-assignment failed", {
+                description: error instanceof Error ? error.message : "Unknown error",
+            });
+        } finally {
+            setAutoAssigningId(null);
+        }
+    };
+
+    const handleBulkAutoAssign = async () => {
+        if (pendingComplaints.length === 0) return;
+
+        setAutoAssigningId("bulk");
+        try {
+            const result = await autoAssignmentEngine.bulkAutoAssign(pendingComplaints);
+
+            if (result.successful.length > 0) {
+                toast.success(`Successfully auto-assigned ${result.successful.length} complaints!`, {
+                    description: result.failed.length > 0
+                        ? `Failed to assign ${result.failed.length} complaints.`
+                        : "All pending complaints have been assigned.",
+                });
+
+                queryClient.invalidateQueries({ queryKey: ["department-complaints"] });
+                queryClient.invalidateQueries({ queryKey: ["all-complaints"] });
+                queryClient.invalidateQueries({ queryKey: ["complaint-stats"] });
+            } else if (result.failed.length > 0) {
+                toast.error("Failed to auto-assign any complaints", {
+                    description: "No available staff found for the pending complaints. Please assign manually.",
+                });
+            }
+        } catch (error: unknown) {
+            toast.error("Bulk auto-assignment failed", {
                 description: error instanceof Error ? error.message : "Unknown error",
             });
         } finally {
@@ -162,9 +171,32 @@ const HODPendingComplaints = () => {
                     </div>
 
                     <div className="card-elevated p-6">
-                        <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                            <Clock className="w-5 h-5 text-warning" />
-                            Pending Approvals ({pendingComplaints.length})
+                        <h2 className="text-lg font-bold mb-4 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Clock className="w-5 h-5 text-warning" />
+                                Pending Approvals ({pendingComplaints.length})
+                            </div>
+                            {pendingComplaints.length > 0 && (
+                                <Button
+                                    size="sm"
+                                    variant="accent"
+                                    onClick={handleBulkAutoAssign}
+                                    disabled={autoAssigningId !== null}
+                                    className="shadow-sm"
+                                >
+                                    {autoAssigningId === "bulk" ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                            Assigning All...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Zap className="w-4 h-4 mr-2" />
+                                            Auto-Assign All
+                                        </>
+                                    )}
+                                </Button>
+                            )}
                         </h2>
 
                         {loadingDeptComplaints ? (

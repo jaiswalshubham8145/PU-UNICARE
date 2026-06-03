@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Shield, Loader2, User, Mail, Lock, Briefcase } from "lucide-react";
 import { Database } from '@/integrations/supabase/types';
+import { isUniversityEmail, getUniversityEmailError } from "@/lib/emailValidation";
 
 type AppRole = Database['public']['Enums']['app_role'];
 
@@ -24,6 +25,17 @@ const Register = () => {
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Validate university email domain
+        if (!isUniversityEmail(email)) {
+            toast({
+                variant: "destructive",
+                title: "Invalid email address",
+                description: getUniversityEmailError(),
+            });
+            return;
+        }
+
         if (password !== confirmPassword) {
             toast({
                 variant: "destructive",

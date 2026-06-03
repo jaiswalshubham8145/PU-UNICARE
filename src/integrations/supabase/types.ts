@@ -39,6 +39,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      auto_assignment_logs: {
+        Row: {
+          assigned_to_user_id: string | null
+          assignment_reason: string
+          candidates_considered: Json | null
+          complaint_id: string
+          created_at: string | null
+          id: string
+          overridden_by: string | null
+          override_reason: string | null
+          proximity_score: number | null
+          skill_match_score: number | null
+          total_score: number | null
+          was_overridden: boolean | null
+          workload_score: number | null
+        }
+        Insert: {
+          assigned_to_user_id?: string | null
+          assignment_reason: string
+          candidates_considered?: Json | null
+          complaint_id: string
+          created_at?: string | null
+          id?: string
+          overridden_by?: string | null
+          override_reason?: string | null
+          proximity_score?: number | null
+          skill_match_score?: number | null
+          total_score?: number | null
+          was_overridden?: boolean | null
+          workload_score?: number | null
+        }
+        Update: {
+          assigned_to_user_id?: string | null
+          assignment_reason?: string
+          candidates_considered?: Json | null
+          complaint_id?: string
+          created_at?: string | null
+          id?: string
+          overridden_by?: string | null
+          override_reason?: string | null
+          proximity_score?: number | null
+          skill_match_score?: number | null
+          total_score?: number | null
+          was_overridden?: boolean | null
+          workload_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auto_assignment_logs_complaint_id_fkey"
+            columns: ["complaint_id"]
+            isOneToOne: false
+            referencedRelation: "complaints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       buildings: {
         Row: {
           category: string
@@ -249,15 +305,20 @@ export type Database = {
         Row: {
           approved_by: string | null
           assigned_to: string | null
+          auto_assignment_log_id: string | null
           building_id: string | null
           category_id: string | null
           complaint_number: string
           created_at: string
           department_id: string
           description: string
+          escalation_level: number | null
           expected_resolution: string | null
           id: string
           image_urls: string[] | null
+          is_auto_assigned: boolean | null
+          is_sla_breached: boolean | null
+          last_escalated_at: string | null
           location: string
           priority: Database["public"]["Enums"]["complaint_priority"]
           resolved_at: string | null
@@ -270,15 +331,20 @@ export type Database = {
         Insert: {
           approved_by?: string | null
           assigned_to?: string | null
+          auto_assignment_log_id?: string | null
           building_id?: string | null
           category_id?: string | null
           complaint_number: string
           created_at?: string
           department_id: string
           description: string
+          escalation_level?: number | null
           expected_resolution?: string | null
           id?: string
           image_urls?: string[] | null
+          is_auto_assigned?: boolean | null
+          is_sla_breached?: boolean | null
+          last_escalated_at?: string | null
           location: string
           priority?: Database["public"]["Enums"]["complaint_priority"]
           resolved_at?: string | null
@@ -291,15 +357,20 @@ export type Database = {
         Update: {
           approved_by?: string | null
           assigned_to?: string | null
+          auto_assignment_log_id?: string | null
           building_id?: string | null
           category_id?: string | null
           complaint_number?: string
           created_at?: string
           department_id?: string
           description?: string
+          escalation_level?: number | null
           expected_resolution?: string | null
           id?: string
           image_urls?: string[] | null
+          is_auto_assigned?: boolean | null
+          is_sla_breached?: boolean | null
+          last_escalated_at?: string | null
           location?: string
           priority?: Database["public"]["Enums"]["complaint_priority"]
           resolved_at?: string | null
@@ -340,6 +411,75 @@ export type Database = {
           },
         ]
       }
+      complaints_archive: {
+        Row: {
+          approved_by: string | null
+          assigned_to: string | null
+          building_id: string | null
+          category_id: string | null
+          complaint_number: string
+          created_at: string
+          department_id: string
+          description: string
+          expected_resolution: string | null
+          id: string
+          image_urls: string[] | null
+          is_sla_breached: boolean | null
+          location: string
+          priority: Database["public"]["Enums"]["complaint_priority"]
+          resolved_at: string | null
+          search_vector: unknown
+          status: Database["public"]["Enums"]["complaint_status"]
+          submitted_by: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          approved_by?: string | null
+          assigned_to?: string | null
+          building_id?: string | null
+          category_id?: string | null
+          complaint_number: string
+          created_at?: string
+          department_id: string
+          description: string
+          expected_resolution?: string | null
+          id?: string
+          image_urls?: string[] | null
+          is_sla_breached?: boolean | null
+          location: string
+          priority?: Database["public"]["Enums"]["complaint_priority"]
+          resolved_at?: string | null
+          search_vector?: unknown
+          status?: Database["public"]["Enums"]["complaint_status"]
+          submitted_by: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          approved_by?: string | null
+          assigned_to?: string | null
+          building_id?: string | null
+          category_id?: string | null
+          complaint_number?: string
+          created_at?: string
+          department_id?: string
+          description?: string
+          expected_resolution?: string | null
+          id?: string
+          image_urls?: string[] | null
+          is_sla_breached?: boolean | null
+          location?: string
+          priority?: Database["public"]["Enums"]["complaint_priority"]
+          resolved_at?: string | null
+          search_vector?: unknown
+          status?: Database["public"]["Enums"]["complaint_status"]
+          submitted_by?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       departments: {
         Row: {
           code: string
@@ -360,6 +500,175 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      digest_preferences: {
+        Row: {
+          created_at: string | null
+          evening_digest_enabled: boolean | null
+          evening_digest_time: string | null
+          id: string
+          include_escalated_complaints: boolean | null
+          include_pending_complaints: boolean | null
+          include_performance_metrics: boolean | null
+          include_sla_breaches: boolean | null
+          morning_digest_enabled: boolean | null
+          morning_digest_time: string | null
+          updated_at: string | null
+          user_id: string
+          weekly_report_day: number | null
+          weekly_report_enabled: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          evening_digest_enabled?: boolean | null
+          evening_digest_time?: string | null
+          id?: string
+          include_escalated_complaints?: boolean | null
+          include_pending_complaints?: boolean | null
+          include_performance_metrics?: boolean | null
+          include_sla_breaches?: boolean | null
+          morning_digest_enabled?: boolean | null
+          morning_digest_time?: string | null
+          updated_at?: string | null
+          user_id: string
+          weekly_report_day?: number | null
+          weekly_report_enabled?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          evening_digest_enabled?: boolean | null
+          evening_digest_time?: string | null
+          id?: string
+          include_escalated_complaints?: boolean | null
+          include_pending_complaints?: boolean | null
+          include_performance_metrics?: boolean | null
+          include_sla_breaches?: boolean | null
+          morning_digest_enabled?: boolean | null
+          morning_digest_time?: string | null
+          updated_at?: string | null
+          user_id?: string
+          weekly_report_day?: number | null
+          weekly_report_enabled?: boolean | null
+        }
+        Relationships: []
+      }
+      escalation_history: {
+        Row: {
+          acknowledged_at: string | null
+          complaint_id: string
+          escalated_at: string | null
+          escalated_from_user_id: string | null
+          escalated_to_user_id: string | null
+          escalation_level: number
+          escalation_rule_id: string | null
+          id: string
+          reason: string | null
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          complaint_id: string
+          escalated_at?: string | null
+          escalated_from_user_id?: string | null
+          escalated_to_user_id?: string | null
+          escalation_level?: number
+          escalation_rule_id?: string | null
+          id?: string
+          reason?: string | null
+        }
+        Update: {
+          acknowledged_at?: string | null
+          complaint_id?: string
+          escalated_at?: string | null
+          escalated_from_user_id?: string | null
+          escalated_to_user_id?: string | null
+          escalation_level?: number
+          escalation_rule_id?: string | null
+          id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escalation_history_complaint_id_fkey"
+            columns: ["complaint_id"]
+            isOneToOne: false
+            referencedRelation: "complaints"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escalation_history_escalation_rule_id_fkey"
+            columns: ["escalation_rule_id"]
+            isOneToOne: false
+            referencedRelation: "escalation_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      escalation_rules: {
+        Row: {
+          category_id: string | null
+          created_at: string | null
+          department_id: string | null
+          escalate_after_hours: number
+          escalate_to_role: string
+          id: string
+          is_active: boolean | null
+          level: number
+          notify_original_assignee: boolean | null
+          notify_submitter: boolean | null
+          notify_via: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string | null
+          department_id?: string | null
+          escalate_after_hours?: number
+          escalate_to_role: string
+          id?: string
+          is_active?: boolean | null
+          level?: number
+          notify_original_assignee?: boolean | null
+          notify_submitter?: boolean | null
+          notify_via?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string | null
+          department_id?: string | null
+          escalate_after_hours?: number
+          escalate_to_role?: string
+          id?: string
+          is_active?: boolean | null
+          level?: number
+          notify_original_assignee?: boolean | null
+          notify_submitter?: boolean | null
+          notify_via?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escalation_rules_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escalation_rules_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "department_analytics"
+            referencedColumns: ["department_id"]
+          },
+          {
+            foreignKeyName: "escalation_rules_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       holidays: {
         Row: {
@@ -535,37 +844,58 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
+          bio: string | null
           created_at: string
           department_id: string | null
+          designation: string | null
           email: string
           employee_id: string | null
           full_name: string
           id: string
           phone: string | null
+          phone_verified: boolean | null
+          skills: string[] | null
           updated_at: string
           user_id: string
+          whatsapp_enabled: boolean | null
+          years_of_experience: number | null
         }
         Insert: {
+          avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           department_id?: string | null
+          designation?: string | null
           email: string
           employee_id?: string | null
           full_name: string
           id?: string
           phone?: string | null
+          phone_verified?: boolean | null
+          skills?: string[] | null
           updated_at?: string
           user_id: string
+          whatsapp_enabled?: boolean | null
+          years_of_experience?: number | null
         }
         Update: {
+          avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           department_id?: string | null
+          designation?: string | null
           email?: string
           employee_id?: string | null
           full_name?: string
           id?: string
           phone?: string | null
+          phone_verified?: boolean | null
+          skills?: string[] | null
           updated_at?: string
           user_id?: string
+          whatsapp_enabled?: boolean | null
+          years_of_experience?: number | null
         }
         Relationships: [
           {
@@ -583,6 +913,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      push_subscriptions: {
+        Row: {
+          auth_key: string
+          created_at: string | null
+          device_name: string | null
+          device_type: string | null
+          endpoint: string
+          id: string
+          is_active: boolean | null
+          last_used_at: string | null
+          p256dh_key: string
+          user_id: string
+        }
+        Insert: {
+          auth_key: string
+          created_at?: string | null
+          device_name?: string | null
+          device_type?: string | null
+          endpoint: string
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          p256dh_key: string
+          user_id: string
+        }
+        Update: {
+          auth_key?: string
+          created_at?: string | null
+          device_name?: string | null
+          device_type?: string | null
+          endpoint?: string
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          p256dh_key?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       saved_searches: {
         Row: {
@@ -768,6 +1137,143 @@ export type Database = {
           },
         ]
       }
+      staff_availability: {
+        Row: {
+          current_workload: number | null
+          id: string
+          is_on_duty: boolean | null
+          last_seen_at: string | null
+          location_lat: number | null
+          location_lng: number | null
+          max_workload: number | null
+          shift_end: string | null
+          shift_start: string | null
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          current_workload?: number | null
+          id?: string
+          is_on_duty?: boolean | null
+          last_seen_at?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          max_workload?: number | null
+          shift_end?: string | null
+          shift_start?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          current_workload?: number | null
+          id?: string
+          is_on_duty?: boolean | null
+          last_seen_at?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          max_workload?: number | null
+          shift_end?: string | null
+          shift_start?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      staff_shifts: {
+        Row: {
+          backup_user_id: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_leave: boolean | null
+          leave_type: string | null
+          notes: string | null
+          shift_date: string
+          shift_end: string
+          shift_start: string
+          shift_type: string | null
+          user_id: string
+        }
+        Insert: {
+          backup_user_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_leave?: boolean | null
+          leave_type?: string | null
+          notes?: string | null
+          shift_date: string
+          shift_end: string
+          shift_start: string
+          shift_type?: string | null
+          user_id: string
+        }
+        Update: {
+          backup_user_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_leave?: boolean | null
+          leave_type?: string | null
+          notes?: string | null
+          shift_date?: string
+          shift_end?: string
+          shift_start?: string
+          shift_type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      staff_skills: {
+        Row: {
+          category_id: string | null
+          certifications: string[] | null
+          created_at: string | null
+          id: string
+          is_primary: boolean | null
+          proficiency_level: number | null
+          skill_name: string
+          updated_at: string | null
+          user_id: string
+          years_experience: number | null
+        }
+        Insert: {
+          category_id?: string | null
+          certifications?: string[] | null
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean | null
+          proficiency_level?: number | null
+          skill_name: string
+          updated_at?: string | null
+          user_id: string
+          years_experience?: number | null
+        }
+        Update: {
+          category_id?: string | null
+          certifications?: string[] | null
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean | null
+          proficiency_level?: number | null
+          skill_name?: string
+          updated_at?: string | null
+          user_id?: string
+          years_experience?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_skills_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_config: {
         Row: {
           description: string | null
@@ -825,8 +1331,67 @@ export type Database = {
           },
         ]
       }
+      whatsapp_contacts: {
+        Row: {
+          country_code: string | null
+          created_at: string | null
+          id: string
+          is_verified: boolean | null
+          last_message_at: string | null
+          opt_in_digest: boolean | null
+          opt_in_notifications: boolean | null
+          opt_in_updates: boolean | null
+          phone_number: string
+          updated_at: string | null
+          user_id: string
+          verification_code: string | null
+          verification_expires_at: string | null
+        }
+        Insert: {
+          country_code?: string | null
+          created_at?: string | null
+          id?: string
+          is_verified?: boolean | null
+          last_message_at?: string | null
+          opt_in_digest?: boolean | null
+          opt_in_notifications?: boolean | null
+          opt_in_updates?: boolean | null
+          phone_number: string
+          updated_at?: string | null
+          user_id: string
+          verification_code?: string | null
+          verification_expires_at?: string | null
+        }
+        Update: {
+          country_code?: string | null
+          created_at?: string | null
+          id?: string
+          is_verified?: boolean | null
+          last_message_at?: string | null
+          opt_in_digest?: boolean | null
+          opt_in_notifications?: boolean | null
+          opt_in_updates?: boolean | null
+          phone_number?: string
+          updated_at?: string | null
+          user_id?: string
+          verification_code?: string | null
+          verification_expires_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
+      dashboard_stats: {
+        Row: {
+          avg_resolution_hours: number | null
+          completed: number | null
+          in_progress: number | null
+          pending: number | null
+          sla_breached: number | null
+          total_complaints: number | null
+        }
+        Relationships: []
+      }
       department_analytics: {
         Row: {
           avg_rating: number | null
@@ -843,10 +1408,12 @@ export type Database = {
       }
     }
     Functions: {
+      archive_old_complaints: { Args: never; Returns: number }
       calculate_sla_deadline: {
         Args: { hours_to_add: number; start_time: string }
         Returns: string
       }
+      check_and_escalate_complaints: { Args: never; Returns: number }
       create_notification: {
         Args: {
           _complaint_id?: string
@@ -858,6 +1425,44 @@ export type Database = {
         }
         Returns: string
       }
+      find_auto_assignment_candidate: {
+        Args: { _category_id?: string; _department_id: string }
+        Returns: {
+          assignment_reason: string
+          candidate_email: string
+          candidate_name: string
+          candidate_role: string
+          candidate_user_id: string
+        }[]
+      }
+      get_best_available_staff: {
+        Args: {
+          p_category_id: string
+          p_department_id: string
+          p_priority?: string
+        }
+        Returns: {
+          full_name: string
+          skill_score: number
+          total_score: number
+          user_id: string
+          workload_score: number
+        }[]
+      }
+      get_complaint_recipients_info: {
+        Args: {
+          p_assignee_id?: string
+          p_department_id: string
+          p_include_admins: boolean
+          p_include_hod: boolean
+          p_submitter_id?: string
+        }
+        Returns: {
+          email: string
+          full_name: string
+          role: string
+        }[]
+      }
       get_user_department: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
@@ -866,6 +1471,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      refresh_dashboard_stats: { Args: never; Returns: undefined }
       refresh_department_analytics: { Args: never; Returns: undefined }
       search_complaints: {
         Args: {

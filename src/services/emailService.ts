@@ -14,7 +14,14 @@ export type EmailType =
     | "work_resumed"
     | "verification_requested"
     | "verification_rejected"
-    | "verification_approved";
+    | "verification_approved"
+    | "escalated"
+    | "complaint_submitted"
+    | "complaint_assigned"
+    | "resolved"
+    | "feedback_request"
+    | "reminder"
+    | "digest";
 
 // Complaint data needed for emails
 export interface ComplaintEmailData {
@@ -42,6 +49,8 @@ export interface EmailContext {
     rating?: number;
     feedback?: string;
     assigneeName?: string;
+    escalationLevel?: string;
+    escalationReason?: string;
 }
 
 interface RecipientInfo {
@@ -62,98 +71,29 @@ export async function getComplaintRecipients(
     includeAdmins = true
 ): Promise<RecipientInfo[]> {
     const recipients: RecipientInfo[] = [];
-    const addedEmails = new Set<string>();
 
     try {
-        // 1. Get submitter info
-        if (includeSubmitter && complaint.submitted_by) {
-            const { data: submitterProfile } = await supabase
-                .from("profiles")
-                .select("email, full_name")
-                .eq("user_id", complaint.submitted_by)
-                .single();
+        const { data, error } = await supabase.rpc('get_complaint_recipients_info', {
+            p_department_id: complaint.department_id || null,
+            p_include_hod: includeHOD,
+            p_include_admins: includeAdmins,
+            p_assignee_id: includeAssignee ? complaint.assigned_to : null,
+            p_submitter_id: includeSubmitter ? complaint.submitted_by : null
+        });
 
-            if (submitterProfile?.email && !addedEmails.has(submitterProfile.email)) {
+        if (error) {
+            console.error("Error fetching email recipients via RPC:", error);
+            throw error;
+        }
+
+        if (data) {
+            data.forEach((row: any) => {
                 recipients.push({
-                    email: submitterProfile.email,
-                    name: submitterProfile.full_name,
-                    role: "submitter",
+                    email: row.email,
+                    name: row.full_name,
+                    role: row.role,
                 });
-                addedEmails.add(submitterProfile.email);
-            }
-        }
-
-        // 2. Get assigned staff info
-        if (includeAssignee && complaint.assigned_to) {
-            const { data: assigneeProfile } = await supabase
-                .from("profiles")
-                .select("email, full_name")
-                .eq("user_id", complaint.assigned_to)
-                .single();
-
-            if (assigneeProfile?.email && !addedEmails.has(assigneeProfile.email)) {
-                recipients.push({
-                    email: assigneeProfile.email,
-                    name: assigneeProfile.full_name,
-                    role: "assignee",
-                });
-                addedEmails.add(assigneeProfile.email);
-            }
-        }
-
-        // 3. Get department HOD(s)
-        if (includeHOD && complaint.department_id) {
-            const { data: hodRoles } = await supabase
-                .from("user_roles")
-                .select("user_id")
-                .eq("role", "hod")
-                .eq("department_id", complaint.department_id);
-
-            if (hodRoles && hodRoles.length > 0) {
-                const hodUserIds = hodRoles.map((r) => r.user_id);
-                const { data: hodProfiles } = await supabase
-                    .from("profiles")
-                    .select("email, full_name")
-                    .in("user_id", hodUserIds);
-
-                hodProfiles?.forEach((profile) => {
-                    if (profile.email && !addedEmails.has(profile.email)) {
-                        recipients.push({
-                            email: profile.email,
-                            name: profile.full_name,
-                            role: "hod",
-                        });
-                        addedEmails.add(profile.email);
-                    }
-                });
-            }
-        }
-
-        // 4. Get all admins
-        if (includeAdmins) {
-            const { data: adminRoles } = await supabase
-                .from("user_roles")
-                .select("user_id")
-                .eq("role", "admin");
-
-            if (adminRoles && adminRoles.length > 0) {
-                const adminUserIds = adminRoles.map((r) => r.user_id);
-                const { data: adminProfiles } = await supabase
-                    .from("profiles")
-                    .select("email, full_name")
-                    .in("user_id", adminUserIds);
-
-                adminProfiles?.forEach((profile) => {
-                    if (profile.email && !addedEmails.has(profile.email)) {
-                        recipients.push({
-                            email: profile.email,
-                            name: profile.full_name,
-                            role: "admin",
-                        });
-                        addedEmails.add(profile.email);
-                    }
-                });
-            }
+            });
         }
     } catch (error) {
         console.error("Error fetching email recipients:", error);
@@ -170,15 +110,19 @@ function generateSubject(type: EmailType, complaint: ComplaintEmailData): string
 
     switch (type) {
         case "new_complaint":
+        case "complaint_submitted":
             return `${prefix} New Complaint Registered: ${complaint.title}`;
         case "status_update":
             return `${prefix} Status Updated to ${complaint.status.replace("_", " ").toUpperCase()}`;
         case "assignment":
+        case "complaint_assigned":
             return `${prefix} New Task Assigned: ${complaint.title}`;
         case "completion":
             return `${prefix} Complaint Marked as Complete`;
         case "sla_breach":
             return `⚠️ ${prefix} SLA BREACH ALERT`;
+        case "escalated":
+            return `⚠️ ${prefix} COMPLAINT ESCALATED`;
         case "progress_update":
             return `${prefix} Progress Update`;
         case "work_started":
@@ -193,6 +137,14 @@ function generateSubject(type: EmailType, complaint: ComplaintEmailData): string
             return `${prefix} Completion Rejected - Rework Required`;
         case "verification_approved":
             return `${prefix} Complaint Verified & Closed`;
+        case "resolved":
+            return `${prefix} Complaint Resolved`;
+        case "feedback_request":
+            return `${prefix} How did we do? Rate our service`;
+        case "reminder":
+            return `${prefix} Reminder: Action Needed`;
+        case "digest":
+            return `PU Unicare Daily Digest`;
         default:
             return `${prefix} Complaint Update`;
     }
@@ -209,8 +161,10 @@ function getRecipientStrategy(type: EmailType): {
 } {
     switch (type) {
         case "new_complaint":
+        case "complaint_submitted":
             return { includeSubmitter: true, includeAssignee: false, includeHOD: true, includeAdmins: true };
         case "assignment":
+        case "complaint_assigned":
             return { includeSubmitter: true, includeAssignee: true, includeHOD: true, includeAdmins: false };
         case "status_update":
         case "work_started":
@@ -226,7 +180,15 @@ function getRecipientStrategy(type: EmailType): {
         case "verification_approved":
             return { includeSubmitter: true, includeAssignee: true, includeHOD: true, includeAdmins: false };
         case "sla_breach":
+        case "escalated":
             return { includeSubmitter: false, includeAssignee: true, includeHOD: true, includeAdmins: true };
+        case "resolved":
+        case "feedback_request":
+            return { includeSubmitter: true, includeAssignee: false, includeHOD: false, includeAdmins: false };
+        case "reminder":
+            return { includeSubmitter: true, includeAssignee: true, includeHOD: false, includeAdmins: false };
+        case "digest":
+            return { includeSubmitter: false, includeAssignee: false, includeHOD: true, includeAdmins: true };
         default:
             return { includeSubmitter: true, includeAssignee: true, includeHOD: true, includeAdmins: false };
     }
@@ -276,6 +238,8 @@ export async function sendComplaintEmail(
             departmentName: complaint.department_name,
             categoryName: complaint.category_name,
             expectedResolution: complaint.expected_resolution,
+            escalationLevel: context.escalationLevel,
+            escalationReason: context.escalationReason,
             ...context,
         };
 
