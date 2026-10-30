@@ -191,13 +191,20 @@ const HeroSection = () => {
                 className="glass-panel-dark p-2 sm:p-2.5 rounded-2xl border border-white/15 dark:border-[#E0C88B]/30 flex flex-col sm:flex-row items-center gap-2 shadow-[0_15px_40px_rgba(0,0,0,0.7),0_0_25px_rgba(224,200,139,0.15)] focus-within:border-[#E0C88B] transition-all"
               >
                 <div className="relative flex-1 w-full flex items-center">
-                  <Search className="w-5 h-5 absolute left-3.5 text-[#E0C88B]" />
+                  <button
+                    type="submit"
+                    className="absolute left-3.5 text-[#E0C88B] hover:scale-110 transition-transform cursor-pointer p-1"
+                    title="Track Complaint"
+                    aria-label="Track Complaint"
+                  >
+                    <Search className="w-5 h-5" />
+                  </button>
                   <Input
                     type="text"
                     placeholder="Fast Track Ticket # (e.g. PU-2026-1042)..."
                     value={ticketInput}
                     onChange={(e) => setTicketInput(e.target.value)}
-                    className="bg-transparent border-none text-foreground pl-11 h-12 text-sm sm:text-base focus-visible:ring-0 placeholder:text-slate-400 font-sans font-medium"
+                    className="bg-transparent border-none text-foreground pl-12 h-12 text-sm sm:text-base focus-visible:ring-0 placeholder:text-slate-400 font-sans font-medium"
                   />
                 </div>
                 <Button

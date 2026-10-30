@@ -93,16 +93,17 @@ const Navbar = () => {
 
           {/* Right CTA & Utilities */}
           <div className="hidden lg:flex items-center gap-1.5 xl:gap-2 shrink-0">
-            {/* Quick Command */}
+            {/* Quick Search & Navigator */}
             <button
-              onClick={() => window.dispatchEvent(new CustomEvent('unicare:toggle-palette'))}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-semibold text-muted-foreground hover:text-[#E0C88B] bg-white/5 hover:bg-white/10 border border-white/15 hover:border-[#E0C88B]/40 transition-all shadow-sm group whitespace-nowrap"
-              title="Quick Search & Actions (Ctrl+K or ⌘K)"
-              aria-label="Open command palette"
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent('unicare:open-palette'))}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-muted-foreground hover:text-[#E0C88B] bg-white/5 hover:bg-white/10 border border-white/15 hover:border-[#E0C88B]/40 transition-all shadow-sm group whitespace-nowrap cursor-pointer"
+              title="Search campus, tickets, commands (Ctrl+K or ⌘K)"
+              aria-label="Open search and quick navigator"
             >
               <Search className="w-3.5 h-3.5 text-[#E0C88B] group-hover:scale-110 transition-transform" />
-              <span className="hidden xl:inline text-[11px]">Command</span>
-              <kbd className="text-[10px] bg-[#E0C88B]/15 text-[#E0C88B] px-1.5 py-0.5 rounded border border-[#E0C88B]/30 font-mono shadow-inner">⌘K</kbd>
+              <span className="text-[12px] font-bold text-slate-200 group-hover:text-[#E0C88B]">Search</span>
+              <kbd className="text-[10px] bg-[#E0C88B]/15 text-[#E0C88B] px-1.5 py-0.5 rounded border border-[#E0C88B]/30 font-mono shadow-inner font-bold">⌘K</kbd>
             </button>
 
             {/* Tour */}
@@ -225,13 +226,27 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            className="lg:hidden p-2 rounded-md hover:bg-accent/10 text-foreground transition-colors"
-            onClick={() => setIsOpen(!isOpen)}
-          >
-            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+          {/* Mobile Right Controls: Search + Hamburger */}
+          <div className="lg:hidden flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent('unicare:open-palette'))}
+              className="p-2 rounded-full text-[#E0C88B] bg-white/5 hover:bg-white/10 border border-[#E0C88B]/30 hover:border-[#E0C88B]/60 transition-all cursor-pointer shadow-sm"
+              aria-label="Open search navigator"
+              title="Search"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+
+            <button
+              type="button"
+              className="p-2 rounded-md hover:bg-accent/10 text-foreground transition-colors cursor-pointer"
+              onClick={() => setIsOpen(!isOpen)}
+              aria-label="Toggle navigation menu"
+            >
+              {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Navigation */}
@@ -260,15 +275,18 @@ const Navbar = () => {
               )}
               <div className="flex flex-col gap-2 mt-4 px-4">
                 <Button
+                  type="button"
                   variant="outline"
                   onClick={() => {
                     setIsOpen(false);
-                    window.dispatchEvent(new CustomEvent('unicare:toggle-palette'));
+                    setTimeout(() => {
+                      window.dispatchEvent(new CustomEvent('unicare:open-palette'));
+                    }, 50);
                   }}
-                  className="justify-start gap-2 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10 font-semibold"
+                  className="justify-start gap-2 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10 font-semibold cursor-pointer"
                 >
                   <Search className="w-4 h-4 text-emerald-400" />
-                  Quick Command (⌘K)
+                  Quick Search Navigator (⌘K)
                 </Button>
                 <Button
                   variant="outline"

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -24,11 +24,15 @@ import {
   Bot,
   Utensils,
   BookOpen,
+  CornerDownLeft,
+  HelpCircle,
 } from "lucide-react";
 import { useTourContext } from "@/components/tour/SiteTourContext";
 import { useTheme } from "@/hooks/useTheme";
 import { useI18n } from "@/hooks/useI18n";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
+
+export type CommandCategory = "All" | "Actions" | "AI Features" | "Navigation" | "Campus Hotspots" | "Categories";
 
 export interface CommandItem {
   id: string;
@@ -40,9 +44,19 @@ export interface CommandItem {
   action: () => void;
 }
 
+const CATEGORY_TABS: { id: CommandCategory; label: string; icon?: string }[] = [
+  { id: "All", label: "All" },
+  { id: "AI Features", label: "AI Tools" },
+  { id: "Actions", label: "Actions" },
+  { id: "Campus Hotspots", label: "Hotspots" },
+  { id: "Navigation", label: "Navigation" },
+  { id: "Categories", label: "Domains" },
+];
+
 export function CommandPalette() {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState<CommandCategory>("All");
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const navigate = useNavigate();
@@ -50,6 +64,11 @@ export function CommandPalette() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const { setLanguage } = useI18n();
   const { promptInstall, isInstalled } = usePWAInstall();
+
+  const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const isKeyNavRef = useRef(false);
 
   const toggleTheme = useCallback(() => {
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
@@ -76,6 +95,9 @@ export function CommandPalette() {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 50);
     } else {
       document.body.style.overflow = "";
     }
@@ -109,11 +131,13 @@ export function CommandPalette() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen]);
 
-  // Reset query and index on open
+  // Reset query, category and index on open
   useEffect(() => {
     if (isOpen) {
       setQuery("");
+      setActiveCategory("All");
       setSelectedIndex(0);
+      isKeyNavRef.current = false;
     }
   }, [isOpen]);
 
@@ -122,7 +146,7 @@ export function CommandPalette() {
     fn();
   }, []);
 
-  const commands: CommandItem[] = useMemo(
+  const baseCommands: CommandItem[] = useMemo(
     () => [
       // AI Features
       {
@@ -291,6 +315,14 @@ export function CommandPalette() {
         action: () => navigate("/staff-directory"),
       },
       {
+        id: "nav-help",
+        title: "Help Center & FAQs",
+        subtitle: "Troubleshooting answers, escalation matrix, and guides",
+        category: "Navigation",
+        icon: HelpCircle,
+        action: () => navigate("/help"),
+      },
+      {
         id: "nav-contact",
         title: "Emergency Campus Contact",
         subtitle: "Control room hotlines for electrical, water, or IT emergencies",
@@ -402,17 +434,73 @@ export function CommandPalette() {
     [navigate, openTour, theme, resolvedTheme, toggleTheme, setLanguage, isInstalled, promptInstall]
   );
 
-  // Filter commands by search query
+  // Filter commands by search query and category
   const filteredCommands = useMemo(() => {
-    if (!query.trim()) return commands;
-    const q = query.toLowerCase();
-    return commands.filter(
-      (cmd) =>
-        cmd.title.toLowerCase().includes(q) ||
-        (cmd.subtitle && cmd.subtitle.toLowerCase().includes(q)) ||
-        cmd.category.toLowerCase().includes(q)
-    );
-  }, [commands, query]);
+    const trimmed = query.trim();
+    let list = baseCommands;
+
+    if (activeCategory !== "All") {
+      list = list.filter((cmd) => cmd.category === activeCategory);
+    }
+
+    if (trimmed) {
+      const q = trimmed.toLowerCase();
+      const matched = list.filter(
+        (cmd) =>
+          cmd.title.toLowerCase().includes(q) ||
+          (cmd.subtitle && cmd.subtitle.toLowerCase().includes(q)) ||
+          cmd.category.toLowerCase().includes(q)
+      );
+
+      // Dynamic smart options when user types a search term
+      const dynamicItems: CommandItem[] = [];
+
+      // 1. If query looks like a ticket number or contains digits
+      if (/\d/.test(trimmed) || /pu[-_]?\d+/i.test(trimmed)) {
+        dynamicItems.push({
+          id: `dyn-track-${trimmed}`,
+          title: `Track Ticket: "${trimmed.toUpperCase()}"`,
+          subtitle: "Instant lookup in live resolution telemetry",
+          category: "Actions",
+          icon: Search,
+          action: () => navigate("/track", { state: { complaintNumber: trimmed } }),
+        });
+      }
+
+      // 2. Search maintenance directory for symptom
+      dynamicItems.push({
+        id: `dyn-maint-${trimmed}`,
+        title: `Search Maintenance for: "${trimmed}"`,
+        subtitle: "Find technicians, equipment, and related repair SOPs",
+        category: "Actions",
+        icon: Wrench,
+        action: () => navigate("/maintenance"),
+      });
+
+      // 3. File a new complaint with this description
+      dynamicItems.push({
+        id: `dyn-report-${trimmed}`,
+        title: `Report issue: "${trimmed}"`,
+        subtitle: "Pre-fill new maintenance ticket description",
+        category: "Actions",
+        icon: FileText,
+        action: () => navigate("/register-complaint"),
+      });
+
+      return [...dynamicItems, ...matched];
+    }
+
+    return list;
+  }, [baseCommands, query, activeCategory, navigate]);
+
+  // Keep selected index within bounds
+  useEffect(() => {
+    setSelectedIndex((prev) => {
+      if (filteredCommands.length === 0) return 0;
+      if (prev >= filteredCommands.length) return filteredCommands.length - 1;
+      return prev;
+    });
+  }, [filteredCommands.length]);
 
   // Arrow key navigation
   useEffect(() => {
@@ -421,11 +509,13 @@ export function CommandPalette() {
 
       if (e.key === "ArrowDown") {
         e.preventDefault();
+        isKeyNavRef.current = true;
         setSelectedIndex((prev) =>
           prev < filteredCommands.length - 1 ? prev + 1 : 0
         );
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
+        isKeyNavRef.current = true;
         setSelectedIndex((prev) =>
           prev > 0 ? prev - 1 : filteredCommands.length - 1
         );
@@ -441,6 +531,18 @@ export function CommandPalette() {
     return () => window.removeEventListener("keydown", handleNavigation);
   }, [isOpen, filteredCommands, selectedIndex, runAction]);
 
+  // Auto-scroll selected item into view smoothly on keyboard navigation
+  useEffect(() => {
+    if (!isOpen) return;
+    if (isKeyNavRef.current && itemRefs.current[selectedIndex]) {
+      itemRefs.current[selectedIndex]?.scrollIntoView({
+        block: "nearest",
+        behavior: "smooth",
+      });
+      isKeyNavRef.current = false;
+    }
+  }, [selectedIndex, isOpen]);
+
   return (
     <>
       <AnimatePresence>
@@ -448,8 +550,8 @@ export function CommandPalette() {
           <div
             role="dialog"
             aria-modal="true"
-            aria-label="PU UNICARE Command Palette"
-            className="fixed inset-0 z-[120] flex items-start justify-center pt-16 md:pt-24 px-4 overflow-hidden"
+            aria-label="PU UNICARE Quick Navigator"
+            className="fixed inset-0 z-[120] flex items-start justify-center pt-12 md:pt-20 px-3 sm:px-4 overflow-hidden"
           >
             {/* Backdrop */}
             <motion.div
@@ -457,7 +559,7 @@ export function CommandPalette() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsOpen(false)}
-              className="fixed inset-0 bg-black/75 backdrop-blur-md"
+              className="fixed inset-0 bg-black/80 backdrop-blur-md"
             />
 
             {/* Command Palette Window */}
@@ -466,41 +568,120 @@ export function CommandPalette() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
               transition={{ duration: 0.18, ease: "easeOut" }}
-              className="relative w-full max-w-2xl bg-[#071314]/95 text-foreground rounded-3xl border border-emerald-400/40 shadow-[0_25px_80px_rgba(0,0,0,0.9),0_0_50px_rgba(52,211,153,0.25)] backdrop-blur-2xl overflow-hidden flex flex-col max-h-[80vh]"
+              className="relative w-full max-w-2xl bg-[#071314]/95 text-foreground rounded-3xl border border-emerald-400/40 shadow-[0_25px_80px_rgba(0,0,0,0.95),0_0_50px_rgba(52,211,153,0.3)] backdrop-blur-2xl overflow-hidden flex flex-col max-h-[85vh] sm:max-h-[80vh]"
             >
               {/* Search Input Bar */}
-              <div className="relative flex items-center px-5 py-4 border-b border-emerald-500/20 bg-emerald-950/20">
-                <Search className="w-5 h-5 text-emerald-400 shrink-0 mr-3.5 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+              <div className="relative flex items-center px-4 sm:px-5 py-3.5 sm:py-4 border-b border-emerald-500/20 bg-emerald-950/30 gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => inputRef.current?.focus()}
+                  className="text-emerald-400 hover:text-emerald-300 transition-colors shrink-0 cursor-pointer"
+                  title="Search query"
+                  aria-label="Search"
+                >
+                  <Search className="w-5 h-5 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                </button>
+
                 <input
+                  ref={inputRef}
                   type="text"
                   value={query}
                   onChange={(e) => {
                     setQuery(e.target.value);
                     setSelectedIndex(0);
                   }}
-                  placeholder="Type a command, building, voice action, or issue... (or press Esc to close)"
-                  className="w-full bg-transparent text-white placeholder-slate-400 text-base font-medium focus:outline-none"
+                  placeholder="Search commands, buildings, ticket # (PU-2026-...), or issues..."
+                  className="w-full bg-transparent text-white placeholder-slate-400 text-sm sm:text-base font-medium focus:outline-none"
                   autoFocus
                 />
+
+                {query && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setQuery("");
+                      setSelectedIndex(0);
+                      inputRef.current?.focus();
+                    }}
+                    className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors shrink-0"
+                    aria-label="Clear query"
+                    title="Clear query"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+
                 <button
+                  type="button"
                   onClick={() => setIsOpen(false)}
-                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors ml-2"
+                  className="px-2 py-1 rounded-lg text-[11px] font-mono font-bold text-slate-400 hover:text-white hover:bg-white/10 border border-white/10 transition-colors shrink-0"
                   aria-label="Close"
+                  title="Close (Esc)"
                 >
-                  <X className="w-4 h-4" />
+                  ESC
                 </button>
               </div>
 
-              {/* Command List Area */}
-              <div className="p-3 overflow-y-auto max-h-[55vh] space-y-1">
+              {/* Category Filter Chips */}
+              <div className="flex items-center gap-1.5 px-4 py-2 border-b border-white/5 bg-black/20 overflow-x-auto scrollbar-none text-xs">
+                {CATEGORY_TABS.map((tab) => {
+                  const isActive = activeCategory === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveCategory(tab.id);
+                        setSelectedIndex(0);
+                      }}
+                      className={`px-3 py-1 rounded-full font-semibold transition-all shrink-0 cursor-pointer ${
+                        isActive
+                          ? "bg-emerald-500/25 text-emerald-300 border border-emerald-400/50 shadow-[0_0_12px_rgba(52,211,153,0.3)]"
+                          : "text-slate-400 hover:text-slate-200 hover:bg-white/5 border border-transparent"
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  );
+                })}
+                <span className="text-[11px] text-slate-500 ml-auto pl-2 shrink-0 hidden sm:inline">
+                  {filteredCommands.length} {filteredCommands.length === 1 ? "result" : "results"}
+                </span>
+              </div>
+
+              {/* Command List Area with Sleek Custom Scrollbar */}
+              <div
+                ref={listRef}
+                tabIndex={0}
+                className="p-2.5 sm:p-3 overflow-y-auto max-h-[50vh] sm:max-h-[55vh] space-y-1.5 overscroll-contain focus:outline-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-emerald-500/30 hover:[&::-webkit-scrollbar-thumb]:bg-emerald-400/60 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent"
+                style={{
+                  scrollbarWidth: "thin",
+                  scrollbarColor: "rgba(52, 211, 153, 0.4) transparent",
+                }}
+              >
                 {filteredCommands.length === 0 ? (
-                  <div className="py-12 text-center text-slate-400">
-                    <p className="text-sm font-semibold text-slate-300">
-                      No matching commands found
+                  <div className="py-10 text-center text-slate-400 px-4">
+                    <p className="text-sm font-semibold text-slate-200">
+                      No matching actions found for "{query}"
                     </p>
-                    <p className="text-xs text-slate-500 mt-1">
-                      Try searching for "Voice", "Chatbot", "PIET", "PIT", "Hospital", "AC", or "Tour"
+                    <p className="text-xs text-slate-400 mt-2">
+                      Try searching by keyword or click a quick suggestion:
                     </p>
+                    <div className="flex flex-wrap items-center justify-center gap-2 mt-4 max-w-md mx-auto">
+                      {["Voice Complaint", "Chatbot", "Track Ticket", "PIET", "PIT", "Hospital", "AC Repair", "Library"].map((tag) => (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => {
+                            setQuery(tag);
+                            setSelectedIndex(0);
+                          }}
+                          className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 border border-emerald-400/30 transition-all cursor-pointer"
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 ) : (
                   filteredCommands.map((item, idx) => {
@@ -510,8 +691,15 @@ export function CommandPalette() {
                     return (
                       <div
                         key={item.id}
+                        ref={(el) => {
+                          itemRefs.current[idx] = el;
+                        }}
                         onClick={() => runAction(item.action)}
-                        onMouseEnter={() => setSelectedIndex(idx)}
+                        onMouseMove={() => {
+                          if (selectedIndex !== idx) {
+                            setSelectedIndex(idx);
+                          }
+                        }}
                         className={`group flex items-center justify-between px-3.5 py-3 rounded-2xl cursor-pointer transition-all duration-150 ${
                           isSelected
                             ? "bg-emerald-500/20 text-white border border-emerald-400/50 shadow-[0_0_20px_rgba(52,211,153,0.25)]"
@@ -539,7 +727,7 @@ export function CommandPalette() {
                               </span>
                             </div>
                             {item.subtitle && (
-                              <p className="text-xs text-slate-400 truncate mt-0.5">
+                              <p className="text-xs text-slate-400 truncate mt-0.5 font-normal">
                                 {item.subtitle}
                               </p>
                             )}
@@ -548,7 +736,7 @@ export function CommandPalette() {
 
                         <div className="flex items-center gap-2 shrink-0 ml-3">
                           {item.shortcut && (
-                            <kbd className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-white/10 text-emerald-300 border border-emerald-400/30">
+                            <kbd className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-white/10 text-emerald-300 border border-emerald-400/30 hidden sm:inline">
                               {item.shortcut}
                             </kbd>
                           )}
@@ -567,21 +755,21 @@ export function CommandPalette() {
               </div>
 
               {/* Footer Bar */}
-              <div className="px-5 py-3 border-t border-emerald-500/20 bg-emerald-950/40 flex items-center justify-between text-[11px] text-slate-400">
-                <div className="flex items-center gap-4">
+              <div className="px-4 sm:px-5 py-3 border-t border-emerald-500/20 bg-emerald-950/40 flex items-center justify-between text-[11px] text-slate-400">
+                <div className="flex items-center gap-3 sm:gap-4">
                   <span className="flex items-center gap-1">
                     <kbd className="px-1.5 py-0.5 rounded bg-white/10 font-mono text-[10px] text-slate-300">
                       ↑↓
                     </kbd>{" "}
-                    Navigate
+                    Scroll
                   </span>
                   <span className="flex items-center gap-1">
                     <kbd className="px-1.5 py-0.5 rounded bg-white/10 font-mono text-[10px] text-slate-300">
-                      Enter
+                      <CornerDownLeft className="w-2.5 h-2.5 inline" /> Enter
                     </kbd>{" "}
-                    Select
+                    Open
                   </span>
-                  <span className="flex items-center gap-1">
+                  <span className="hidden sm:flex items-center gap-1">
                     <kbd className="px-1.5 py-0.5 rounded bg-white/10 font-mono text-[10px] text-slate-300">
                       Esc
                     </kbd>{" "}
@@ -591,7 +779,7 @@ export function CommandPalette() {
 
                 <div className="flex items-center gap-1.5 text-emerald-300 font-semibold">
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>PU UNICARE Quick Navigator</span>
+                  <span className="truncate">PU UNICARE Quick Navigator</span>
                 </div>
               </div>
             </motion.div>

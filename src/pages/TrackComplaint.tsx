@@ -173,12 +173,20 @@ const TrackComplaint = () => {
               {/* Search input & action button */}
               <div className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
                 <div className="relative flex-1">
-                  <Search className="w-5 h-5 text-[#E0C88B] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <button
+                    type="button"
+                    onClick={handleSearch}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-[#E0C88B] hover:scale-110 transition-transform cursor-pointer"
+                    title="Search Complaint ID"
+                    aria-label="Search"
+                  >
+                    <Search className="w-5 h-5" />
+                  </button>
                   <Input
                     placeholder="Enter ID (e.g. PU-2026-1042)"
                     value={searchId}
                     onChange={(e) => setSearchId(e.target.value)}
-                    onKeyPress={handleKeyPress}
+                    onKeyDown={handleKeyPress}
                     className="h-14 pl-12 pr-4 text-base glass-input border-white/20 text-white placeholder:text-slate-400 focus:border-[#E0C88B] focus:ring-2 focus:ring-[#E0C88B]/30 rounded-2xl shadow-inner font-mono tracking-wider"
                   />
                 </div>
