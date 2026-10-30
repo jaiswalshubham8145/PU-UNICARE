@@ -131,12 +131,12 @@ const MaintenanceCategories = () => {
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
         <div className="text-center mb-12">
-          <span className="inline-block px-6 py-2.5 glass-panel text-[#E0C88B] rounded-full text-xs font-semibold tracking-[0.25em] uppercase mb-6 shadow-[0_0_20px_rgba(224,200,139,0.25)] border-[#E0C88B]/40 bg-[#E0C88B]/10 font-mono">
+          <span className="inline-block px-6 py-2.5 glass-panel text-[#E0C88B] rounded-full text-xs font-semibold tracking-[0.2em] uppercase mb-6 shadow-[0_0_20px_rgba(224,200,139,0.25)] border-[#E0C88B]/40 bg-[#E0C88B]/10 font-sans font-bold">
             Maintenance Modules
           </span>
           <h2 className="font-display text-4xl md:text-5xl font-black mb-4 tracking-tight">
             <span className="text-gradient-royal">Complete Campus</span>{" "}
-            <span className="text-gradient-gold italic-editorial font-normal">Coverage</span>
+            <span className="text-gradient-gold font-extrabold">Coverage</span>
           </h2>
           <p className="text-slate-300 font-normal max-w-2xl mx-auto text-base md:text-lg font-sans">
             From smart research labs to electrical infrastructure — UNICARE monitors and services every wing of Parul University.

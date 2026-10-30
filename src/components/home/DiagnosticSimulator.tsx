@@ -221,7 +221,7 @@ export function DiagnosticSimulator() {
           </div>
 
           <h2 className="font-display text-4xl md:text-5xl font-black text-white tracking-tight leading-tight mb-4">
-            Test Our <span className="text-gradient-gold italic-editorial font-normal">Instant AI Diagnosis</span>
+            Test Our <span className="text-gradient-gold font-extrabold">Instant AI Diagnosis</span>
           </h2>
           <p className="text-base text-slate-300">
             Click any campus asset below to simulate how our Gemini AI models analyze symptoms, predict causes, and calculate resolution SLAs before you even report.

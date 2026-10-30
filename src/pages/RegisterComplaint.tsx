@@ -646,7 +646,7 @@ const RegisterComplaint = () => {
             <h1 className="font-display text-4xl md:text-6xl font-black mb-4 tracking-tight">
               <span className="text-gradient-royal">Register Maintenance</span>{" "}
               <span className="text-gradient-gold block md:inline mt-1">
-                <span className="italic-editorial font-normal">Fast</span> Ticket
+                <span className="font-extrabold text-gradient-gold">Fast</span> Ticket
               </span>
             </h1>
 

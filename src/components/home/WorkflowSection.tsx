@@ -42,12 +42,12 @@ const WorkflowSection = () => {
       <div className="container mx-auto px-6 relative z-10">
         {/* Header */}
         <div className="text-center mb-16">
-          <span className="inline-block px-6 py-2.5 glass-panel text-[#C2A05A] rounded-full text-xs font-semibold tracking-[0.25em] uppercase mb-6 border-[#C2A05A]/25 font-mono">
+          <span className="inline-block px-6 py-2.5 glass-panel text-[#C2A05A] rounded-full text-xs font-semibold tracking-[0.25em] uppercase mb-6 border-[#C2A05A]/30 font-sans font-bold">
             How It Works
           </span>
           <h2 className="font-display text-4xl md:text-5xl font-black mb-4 tracking-tight">
             <span className="text-gradient-royal">Streamlined Complaint</span>{" "}
-            <span className="text-gradient-gold italic-editorial font-normal">Workflow</span>
+            <span className="text-gradient-gold font-extrabold">Workflow</span>
           </h2>
           <p className="text-[#A9B5AC] max-w-2xl mx-auto font-medium text-lg font-sans">
             From submission to resolution — every step is tracked, transparent, and accountable.

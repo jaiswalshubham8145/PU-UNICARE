@@ -572,7 +572,7 @@ const Maintenance = () => {
                 <span className="text-gradient-royal drop-shadow-xl font-bold">Campus Facility</span>
                 <br />
                 <span className="text-gradient-gold block mt-2 text-5xl md:text-8xl tracking-tight">
-                  <span className="italic-editorial font-normal pr-2">Master</span> Catalog
+                  <span className="font-extrabold pr-2 text-gradient-gold">Master</span> Catalog
                 </span>
               </h1>
 

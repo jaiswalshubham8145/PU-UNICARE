@@ -18,7 +18,7 @@ const CTASection = () => {
           <h2 className="font-display text-4xl md:text-6xl font-black mb-6 tracking-tight">
             <span className="text-white">Ready to Transform </span>
             <span className="text-gradient-gold block sm:inline mt-1">
-              <span className="italic-editorial font-normal">Campus</span> Care?
+              <span className="font-extrabold text-gradient-gold">Campus Care?</span>
             </span>
           </h2>
           <p className="text-xl text-[#EDE3CC]/90 mb-10 leading-relaxed font-medium">

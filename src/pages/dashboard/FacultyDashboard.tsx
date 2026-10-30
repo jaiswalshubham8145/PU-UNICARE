@@ -208,7 +208,7 @@ const FacultyDashboard = () => {
                 </span>
               </div>
               <h1 className="font-display text-3xl md:text-5xl font-black text-white tracking-tight leading-tight">
-                Faculty <span className="text-gradient-gold italic-editorial font-normal">Command Studio</span>
+                Faculty <span className="text-gradient-gold font-extrabold">Command Studio</span>
               </h1>
               <p className="text-slate-300 text-sm md:text-base font-sans mt-1">
                 Manage your campus facility requests, track live technicians, and verify completed repairs.

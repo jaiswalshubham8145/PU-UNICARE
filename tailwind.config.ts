@@ -15,10 +15,10 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', '"DM Sans"', 'system-ui', 'sans-serif'],
-        display: ['"Clash Display"', '"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
         body: ['"Plus Jakarta Sans"', '"DM Sans"', 'system-ui', 'sans-serif'],
-        heading: ['"Clash Display"', '"Outfit"', 'system-ui', 'sans-serif'],
+        heading: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
         serif: ['"Instrument Serif"', '"Fraunces"', 'serif'],
         editorial: ['"Instrument Serif"', 'serif'],
         sovereign: ['"Fraunces"', 'serif'],

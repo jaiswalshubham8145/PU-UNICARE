@@ -48,7 +48,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass-panel border-b-0 rounded-2xl mx-3 lg:mx-6 mt-3 shadow-2xl dark:shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_30px_rgba(52,211,153,0.25)] backdrop-blur-md bg-background/80 supports-[backdrop-filter]:bg-background/40 border-white/20 dark:border-emerald-400/30">
+    <nav className="fixed top-0 left-0 right-0 z-50 glass-panel border-b-0 rounded-2xl mx-3 lg:mx-6 mt-3 shadow-2xl dark:shadow-[0_8px_32px_rgba(0,0,0,0.6)] backdrop-blur-md bg-background/80 supports-[backdrop-filter]:bg-background/40 border-white/20 dark:border-white/10">
       <div className="w-full max-w-[1500px] mx-auto px-3 sm:px-4 lg:px-6">
         <div className="flex items-center justify-between h-16 gap-3">
           {/* Logo */}

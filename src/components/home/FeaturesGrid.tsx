@@ -134,12 +134,12 @@ const FeaturesGrid = () => {
       <div className="container mx-auto px-6 relative z-10">
         {/* Header */}
         <div className="text-center mb-12">
-          <span className="inline-block px-6 py-2.5 glass-panel text-[#E0C88B] rounded-full text-xs font-semibold tracking-[0.25em] uppercase mb-6 shadow-[0_0_20px_rgba(224,200,139,0.25)] border-[#E0C88B]/40 bg-[#E0C88B]/10 font-mono">
+          <span className="inline-block px-6 py-2.5 glass-panel text-[#E0C88B] rounded-full text-xs font-semibold tracking-[0.25em] uppercase mb-6 shadow-[0_0_20px_rgba(224,200,139,0.25)] border-[#E0C88B]/40 bg-[#E0C88B]/10 font-sans font-bold">
             Premium Features
           </span>
-          <h2 className="font-display text-4xl md:text-5xl font-black mb-6 leading-tight tracking-tight drop-shadow-sm">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-4 leading-tight tracking-tight">
             <span className="text-gradient-royal">Smart Additions for</span>{" "}
-            <span className="text-gradient-gold italic-sovereign font-normal">Maximum Efficiency</span>
+            <span className="text-gradient-gold">Maximum Efficiency</span>
           </h2>
           <p className="text-slate-300 max-w-3xl mx-auto text-lg leading-relaxed font-normal font-sans">
             UNICARE defines state-of-the-art facility management. Every tool is crafted for precision, speed, and ease of use.

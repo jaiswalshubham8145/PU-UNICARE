@@ -75,7 +75,8 @@ export function InteractiveTiltCard({
       style={{
         rotateX: enableTilt ? rotateX : 0,
         rotateY: enableTilt ? rotateY : 0,
-        transformStyle: "preserve-3d",
+        transformPerspective: 1000,
+        WebkitFontSmoothing: "antialiased",
       }}
       className={cn(
         "relative rounded-3xl transition-shadow duration-300 overflow-hidden",
@@ -92,8 +93,8 @@ export function InteractiveTiltCard({
         }}
       />
 
-      {/* Card Content with 3D Pop */}
-      <div className="relative z-10 w-full h-full">{children}</div>
+      {/* Card Content with Crisp Vector Rendering */}
+      <div className="relative z-10 w-full h-full [backface-visibility:hidden]">{children}</div>
     </motion.div>
   );
 }

@@ -162,7 +162,7 @@ const TrackComplaint = () => {
 
               {/* Title with Combo 1 Clash Display + Combo 4 Italic Accent */}
               <h1 className="font-display text-3xl md:text-6xl font-black mb-4 text-white tracking-tight drop-shadow-md">
-                Track Your <span className="text-gradient-gold italic-editorial font-normal">Complaint</span>
+                Track Your <span className="text-gradient-gold font-extrabold">Complaint</span>
               </h1>
 
               {/* Subtitle */}

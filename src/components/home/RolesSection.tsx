@@ -205,12 +205,12 @@ const RolesSection = () => {
       <div className="container mx-auto px-4 lg:px-8 relative z-10 max-w-7xl">
         {/* Header */}
         <div className="text-center mb-14">
-          <span className="inline-block px-6 py-2.5 glass-panel text-[#E0C88B] rounded-full text-xs font-semibold tracking-[0.25em] uppercase mb-6 shadow-[0_0_20px_rgba(224,200,139,0.25)] border-[#E0C88B]/40 bg-[#E0C88B]/10 font-mono">
+          <span className="inline-block px-6 py-2.5 glass-panel text-[#E0C88B] rounded-full text-xs font-semibold tracking-[0.2em] uppercase mb-6 shadow-[0_0_20px_rgba(224,200,139,0.25)] border-[#E0C88B]/40 bg-[#E0C88B]/10 font-sans font-bold">
             Interactive Access Control
           </span>
           <h2 className="font-display text-4xl md:text-5xl font-black mb-4 tracking-tight">
             <span className="text-gradient-royal">Role-Based</span>{" "}
-            <span className="text-gradient-gold italic-editorial font-normal">Command Console</span>
+            <span className="text-gradient-gold font-extrabold">Command Console</span>
           </h2>
           <p className="text-slate-300 font-normal max-w-2xl mx-auto text-base md:text-lg font-sans">
             Click any campus role to inspect their permissions, capabilities, and live operational dashboard.

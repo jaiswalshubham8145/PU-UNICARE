@@ -124,28 +124,28 @@ const HeroSection = () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
               </span>
-              <span className="text-[#F7F2E7] font-semibold text-xs tracking-[0.25em] uppercase font-mono">
+              <span className="text-[#F7F2E7] font-bold text-xs tracking-[0.15em] uppercase font-sans">
                 Vadodara Campus Dispatch Live
               </span>
               <span className="hidden sm:inline-block text-[#E0C88B]/40">•</span>
-              <span className="hidden sm:inline-block text-[11px] font-mono text-emerald-400 font-bold">
+              <span className="hidden sm:inline-block text-xs font-sans text-emerald-400 font-bold">
                 18m Avg SLA Response
               </span>
             </div>
 
             {/* Heading with Combo 1 Clash Display + Combo 1/4 Italic Accent */}
-            <h1 className="font-display text-5xl md:text-8xl font-black mb-6 leading-[1.08] tracking-tight">
-              <span className="text-gradient-royal drop-shadow-xl font-bold">Experience Campus</span>
+            <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black mb-6 leading-[1.12] tracking-tight">
+              <span className="text-gradient-royal font-extrabold">Experience Campus</span>
               <br />
-              <span className="text-gradient-gold block mt-2 md:mt-3 text-6xl md:text-9xl tracking-tight">
-                <span className="italic-editorial font-normal pr-2">Pure</span> Excellence
+              <span className="text-gradient-gold block mt-2 sm:mt-3 text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black tracking-tight">
+                Pure Excellence
               </span>
             </h1>
 
             {/* Subtitle with Combo 4 DM Sans / Plus Jakarta warmth */}
-            <p className="text-lg md:text-2xl font-normal text-slate-200 mb-10 leading-relaxed max-w-4xl mx-auto drop-shadow-sm font-sans">
-              The next-generation <span className="text-[#E0C88B] font-semibold text-glow-gold italic-sovereign text-2xl md:text-3xl">luxury ecosystem</span> for university facility care with
-              <span className="text-[#34D399] font-semibold text-emerald-glow"> real-time tracking</span>, instant dispatch, and complete accountability.
+            <p className="text-base sm:text-lg md:text-xl font-normal text-slate-200/90 mb-10 leading-relaxed max-w-3xl mx-auto font-sans">
+              The next-generation <span className="text-[#E0C88B] font-semibold">campus ecosystem</span> for university facility care with
+              <span className="text-[#34D399] font-semibold"> real-time tracking</span>, instant dispatch, and complete accountability.
             </p>
 
             {/* CTA Action Buttons — now includes AI Voice button */}
@@ -197,7 +197,7 @@ const HeroSection = () => {
                     placeholder="Fast Track Ticket # (e.g. PU-2026-1042)..."
                     value={ticketInput}
                     onChange={(e) => setTicketInput(e.target.value)}
-                    className="bg-transparent border-none text-foreground pl-11 h-12 text-sm sm:text-base focus-visible:ring-0 placeholder:text-slate-400 font-mono"
+                    className="bg-transparent border-none text-foreground pl-11 h-12 text-sm sm:text-base focus-visible:ring-0 placeholder:text-slate-400 font-sans font-medium"
                   />
                 </div>
                 <Button
@@ -210,14 +210,14 @@ const HeroSection = () => {
               </form>
 
               {/* Quick-Click Sample Ticket Pills */}
-              <div className="flex items-center justify-center gap-2 mt-3 text-xs text-slate-400 font-mono">
-                <span className="text-[11px] uppercase tracking-wider text-slate-500">Try demo:</span>
+              <div className="flex items-center justify-center flex-wrap gap-2 mt-3 text-xs text-slate-300 font-sans">
+                <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Try demo:</span>
                 {sampleTickets.map((demo) => (
                   <button
                     key={demo}
                     type="button"
                     onClick={() => setTicketInput(demo)}
-                    className="px-2 py-0.5 rounded-md bg-white/5 hover:bg-[#E0C88B]/15 hover:text-[#E0C88B] transition-colors border border-white/10 hover:border-[#E0C88B]/30"
+                    className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-[#E0C88B]/20 text-slate-200 hover:text-[#E0C88B] transition-all border border-white/15 hover:border-[#E0C88B]/40 font-mono text-xs font-semibold shadow-sm"
                   >
                     {demo}
                   </button>
