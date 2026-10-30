@@ -75,7 +75,6 @@ export function InteractiveTiltCard({
       style={{
         rotateX: enableTilt ? rotateX : 0,
         rotateY: enableTilt ? rotateY : 0,
-        transformPerspective: 1000,
         WebkitFontSmoothing: "antialiased",
       }}
       className={cn(
@@ -93,8 +92,8 @@ export function InteractiveTiltCard({
         }}
       />
 
-      {/* Card Content with Crisp Vector Rendering */}
-      <div className="relative z-10 w-full h-full [backface-visibility:hidden]">{children}</div>
+      {/* Card Content with Crisp Text */}
+      <div className="relative z-10 w-full h-full">{children}</div>
     </motion.div>
   );
 }

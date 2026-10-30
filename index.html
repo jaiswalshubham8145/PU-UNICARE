@@ -55,7 +55,18 @@
 
   <!-- Critical CSS inlining -->
   <style>
-    body { margin: 0; background: #060F10; }
+    html {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+    body {
+      margin: 0;
+      background: #060F10;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
     #root { min-height: 100vh; }
     .initial-loader { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
     .initial-loader::after { content: ''; width: 40px; height: 40px; border: 3px solid rgba(194,160,90,0.3); border-top-color: #C2A05A; border-radius: 50%; animation: spin 0.8s linear infinite; }

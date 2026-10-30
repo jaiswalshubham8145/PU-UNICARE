@@ -18,7 +18,7 @@ const About = () => {
               <h1 className="text-4xl md:text-5xl font-bold mb-6 text-yellow-600">
                 Transforming Campus Maintenance at Parul University
               </h1>
-              <p className="text-3xl font-extrabold text-blue-700 max-w-4xl mx-auto drop-shadow-sm">
+              <p className="text-3xl font-extrabold text-blue-700 max-w-4xl mx-auto">
                 A centralized, role-based digital maintenance management system designed for excellence.
               </p>
             </div>

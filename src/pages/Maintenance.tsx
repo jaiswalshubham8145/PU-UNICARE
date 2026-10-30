@@ -569,14 +569,14 @@ const Maintenance = () => {
 
               {/* Title with Combo 1 Clash Display + Combo 4 Italic Accent */}
               <h1 className="font-display text-4xl md:text-7xl font-black mb-6 tracking-tight leading-[1.1]">
-                <span className="text-gradient-royal drop-shadow-xl font-bold">Campus Facility</span>
+                <span className="text-gradient-royal font-bold">Campus Facility</span>
                 <br />
                 <span className="text-gradient-gold block mt-2 text-5xl md:text-8xl tracking-tight">
                   <span className="font-extrabold pr-2 text-gradient-gold">Master</span> Catalog
                 </span>
               </h1>
 
-              <p className="text-slate-300 font-sans text-base md:text-xl font-normal leading-relaxed max-w-2xl mx-auto drop-shadow-sm mb-8">
+              <p className="text-slate-300 font-sans text-base md:text-xl font-normal leading-relaxed max-w-2xl mx-auto mb-8">
                 Search and inspect 42 specialized campus infrastructure systems — equipped with real-time SLA metrics, fault diagnostics, and automated technician dispatch.
               </p>
 

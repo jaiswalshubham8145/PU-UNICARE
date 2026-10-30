@@ -165,7 +165,6 @@
     @apply text-foreground;
     background-color: transparent;
     font-feature-settings: "rlig" 1, "calt" 1, "kern" 1;
-    letter-spacing: -0.01em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -197,33 +196,35 @@
     @apply bg-white/[0.08] dark:bg-black/50 border-white/20 dark:border-white/15 focus:border-[#E0C88B] focus:bg-white/[0.12] dark:focus:bg-black/70 focus:ring-2 focus:ring-[#E0C88B]/40 text-foreground placeholder:text-muted-foreground transition-all duration-300 rounded-xl shadow-inner dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.6),0_0_15px_rgba(224,200,139,0.1)];
   }
 
-  /* Glowing Text Gradients — Razor-Sharp & Anti-Aliased */
+  /* Razor-Sharp Glowing Text Gradients */
   .text-gradient-gold {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#F5E6B8] via-[#E0C88B] to-[#C2A05A];
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#D4AF37] via-[#FFF0C8] to-[#C2A05A] font-extrabold;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
   }
 
   .text-gradient-luxury {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#F5E6B8] via-[#34D399] to-[#60A5FA];
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#FFF0C8] via-[#34D399] to-[#60A5FA] font-extrabold;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
   }
 
   .text-gradient-royal {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#FFFFFF] via-[#F3E5AB] to-[#34D399];
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#FFFFFF] via-[#E0C88B] to-[#34D399] font-extrabold;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
   }
 
-  /* Polished Editorial Italic Accents */
+  /* Gen-Z & Sovereign Luxury Italic Accents */
   .italic-editorial {
+    font-family: 'Instrument Serif', serif;
     font-style: italic;
-    font-weight: 500;
+    font-weight: 400;
     letter-spacing: -0.01em;
   }
 
   .italic-sovereign {
+    font-family: 'Fraunces', serif;
     font-style: italic;
     font-weight: 600;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
   }
 
   /* Glowing Card Effects */
@@ -277,9 +278,10 @@
     box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.6), 0 0 45px rgba(52, 211, 153, 0.45);
   }
 
-  /* Polished Text Styles — Crisp & High-Contrast */
+  /* Razor-Sharp Text Styles */
   .text-gradient-premium {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#F3E5AB] via-[#E0C88B] to-[#F3E5AB];
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#FFF0C8] via-[#E0C88B] to-[#FFF0C8] font-extrabold;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
   }
 
   .text-gold-solid {
@@ -287,7 +289,8 @@
   }
 
   .text-emerald-glow {
-    @apply text-[#34D399] font-medium;
+    @apply text-[#34D399] font-bold;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
   }
 
   /* Glowing Badges */
@@ -389,10 +392,6 @@
   animation: slideInRight 0.8s var(--ease-out-expo) forwards;
 }
 
-/* Base styles for smoother transitions globally */
-* {
-  @apply transition-colors duration-200 ease-in-out;
-}
 
 .card-enter {
   opacity: 0;

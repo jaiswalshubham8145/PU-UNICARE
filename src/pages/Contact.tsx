@@ -26,10 +26,10 @@ const Contact = () => {
               <span className="inline-block px-6 py-2 glass-panel text-amber-500 rounded-full text-sm font-bold tracking-widest uppercase mb-6 shadow-sm">
                 24/7 Support
               </span>
-              <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 drop-shadow-lg">
+              <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
                 Get in <span className="text-gradient-gold">Touch</span>
               </h1>
-              <p className="text-slate-200 text-lg max-w-2xl mx-auto drop-shadow-md">
+              <p className="text-slate-200 text-lg max-w-2xl mx-auto">
                 Have questions regarding UNICARE? We are here to help you with maintenance requests, technical issues, and general inquiries.
               </p>
             </div>
