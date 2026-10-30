@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -39,6 +39,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          changed_at: string
+          changed_by: string | null
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          record_id: string
+          table_name: string
+        }
+        Insert: {
+          action: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id: string
+          table_name: string
+        }
+        Update: {
+          action?: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string
+          table_name?: string
+        }
+        Relationships: []
+      }
       auto_assignment_logs: {
         Row: {
           assigned_to_user_id: string | null
@@ -319,7 +352,9 @@ export type Database = {
           is_auto_assigned: boolean | null
           is_sla_breached: boolean | null
           last_escalated_at: string | null
+          latitude: number | null
           location: string
+          longitude: number | null
           priority: Database["public"]["Enums"]["complaint_priority"]
           resolved_at: string | null
           search_vector: unknown
@@ -345,7 +380,9 @@ export type Database = {
           is_auto_assigned?: boolean | null
           is_sla_breached?: boolean | null
           last_escalated_at?: string | null
+          latitude?: number | null
           location: string
+          longitude?: number | null
           priority?: Database["public"]["Enums"]["complaint_priority"]
           resolved_at?: string | null
           search_vector?: unknown
@@ -371,7 +408,9 @@ export type Database = {
           is_auto_assigned?: boolean | null
           is_sla_breached?: boolean | null
           last_escalated_at?: string | null
+          latitude?: number | null
           location?: string
+          longitude?: number | null
           priority?: Database["public"]["Enums"]["complaint_priority"]
           resolved_at?: string | null
           search_vector?: unknown
@@ -691,6 +730,91 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_items: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          location: string | null
+          minimum_stock: number
+          name: string
+          quantity: number
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          location?: string | null
+          minimum_stock?: number
+          name: string
+          quantity?: number
+          unit: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          location?: string | null
+          minimum_stock?: number
+          name?: string
+          quantity?: number
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      inventory_usage: {
+        Row: {
+          complaint_id: string | null
+          id: string
+          item_id: string
+          quantity_used: number
+          used_at: string
+          used_by: string | null
+        }
+        Insert: {
+          complaint_id?: string | null
+          id?: string
+          item_id: string
+          quantity_used: number
+          used_at?: string
+          used_by?: string | null
+        }
+        Update: {
+          complaint_id?: string | null
+          id?: string
+          item_id?: string
+          quantity_used?: number
+          used_at?: string
+          used_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_usage_complaint_id_fkey"
+            columns: ["complaint_id"]
+            isOneToOne: false
+            referencedRelation: "complaints"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_usage_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_usage_used_by_fkey"
+            columns: ["used_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       knowledge_articles: {
         Row: {
           category_id: string | null
@@ -794,6 +918,54 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      maintenance_windows: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          department_id: string | null
+          description: string | null
+          end_time: string
+          id: string
+          start_time: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          department_id?: string | null
+          description?: string | null
+          end_time: string
+          id?: string
+          start_time: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          department_id?: string | null
+          description?: string | null
+          end_time?: string
+          id?: string
+          start_time?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_windows_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_windows_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {

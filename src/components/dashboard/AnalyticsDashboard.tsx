@@ -313,7 +313,7 @@ export default function AnalyticsDashboard() {
                     title="Avg Resolution Time"
                     value={`${analytics?.averageResolutionTime || 0}h`}
                     icon={Clock}
-                    color="bg-gradient-to-br from-purple-500 to-purple-600"
+                    color="bg-gradient-to-br from-[#1F3F73] to-[#12302F]"
                 />
             </div>
 
@@ -392,7 +392,7 @@ export default function AnalyticsDashboard() {
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <BarChart3 className="h-5 w-5 text-purple-500" />
+                            <BarChart3 className="h-5 w-5 text-[#C2A05A]" />
                             Department Comparison
                         </CardTitle>
                         <CardDescription>Complaints by department</CardDescription>
@@ -494,7 +494,7 @@ export default function AnalyticsDashboard() {
                         </div>
                         <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                             <span className="text-gray-600">Active Departments</span>
-                            <span className="font-bold text-purple-600">{analytics?.departmentData?.length || 0}</span>
+                            <span className="font-bold text-[#1F3F73]">{analytics?.departmentData?.length || 0}</span>
                         </div>
                         <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                             <span className="text-gray-600">Pending Review</span>

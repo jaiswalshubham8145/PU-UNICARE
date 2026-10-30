@@ -12,12 +12,26 @@ import BackgroundVideo from "./components/layout/BackgroundVideo";
 import ChatWidget from "./components/chat/ChatWidget";
 import AppRoutes from "./AppRoutes";
 import SkipLink from "./components/SkipLink";
+import { SiteTourProvider } from "./components/tour/SiteTourContext";
+import SiteTourModal from "./components/tour/SiteTourModal";
+import CommandPalette from "./components/common/CommandPalette";
+import PWAInstallBanner from "./components/pwa/PWAInstallBanner";
+import OfflineIndicator from "./components/pwa/OfflineIndicator";
 
-// Register Service Worker for PWA
+// Manage Service Worker for PWA
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
-  });
+  if (import.meta.env.PROD) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    });
+  } else {
+    // In development, unregister any active service worker to prevent stale cache conflicts
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (const registration of registrations) {
+        registration.unregister();
+      }
+    });
+  }
 }
 
 const queryClient = new QueryClient({
@@ -42,11 +56,17 @@ const App = () => {
                 <Toaster />
                 <Sonner />
                 <BrowserRouter>
-                  <SkipLink />
-                  <ScrollToTop />
-                  <BackgroundVideo />
-                  <ChatWidget />
-                  <AppRoutes />
+                  <SiteTourProvider>
+                    <SkipLink />
+                    <ScrollToTop />
+                    <BackgroundVideo />
+                    <OfflineIndicator />
+                    <ChatWidget />
+                    <SiteTourModal />
+                    <CommandPalette />
+                    <PWAInstallBanner />
+                    <AppRoutes />
+                  </SiteTourProvider>
                 </BrowserRouter>
               </TooltipProvider>
             </AuthProvider>

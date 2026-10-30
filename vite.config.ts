@@ -16,6 +16,17 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      'sonner',
+      '@tanstack/react-query',
+      'framer-motion',
+      'lucide-react',
+    ],
+  },
   build: {
     target: 'es2020',
     rollupOptions: {

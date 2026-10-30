@@ -59,7 +59,7 @@ class EscalationService {
             throw error;
         }
 
-        return data || [];
+        return (data as unknown as EscalationRule[]) || [];
     }
 
     /**
@@ -77,7 +77,7 @@ class EscalationService {
             throw error;
         }
 
-        return data;
+        return data as unknown as EscalationRule;
     }
 
     /**
@@ -96,7 +96,7 @@ class EscalationService {
             throw error;
         }
 
-        return data;
+        return data as unknown as EscalationRule;
     }
 
     /**
@@ -300,7 +300,7 @@ class EscalationService {
         for (const user of targetUsers || []) {
             await supabase.from('notifications').insert({
                 user_id: user.user_id,
-                type: 'warning',
+                type: 'sla_warning',
                 title: `🚨 Complaint Escalated - Level ${level}`,
                 message: `Complaint ${complaint.complaint_number} "${complaint.title}" has been escalated and requires your immediate attention.`,
                 related_complaint_id: complaintId,
@@ -312,7 +312,7 @@ class EscalationService {
         if (complaint.submitted_by) {
             await supabase.from('notifications').insert({
                 user_id: complaint.submitted_by,
-                type: 'info',
+                type: 'complaint_updated',
                 title: '📢 Your Complaint Has Been Escalated',
                 message: `Your complaint ${complaint.complaint_number} has been escalated to level ${level} for faster resolution.`,
                 related_complaint_id: complaintId,
@@ -325,7 +325,7 @@ class EscalationService {
             const complaintForEmail = await getComplaintForEmail(complaintId);
             if (complaintForEmail) {
                 await sendComplaintEmail('escalated', complaintForEmail, {
-                    escalationLevel: level,
+                    escalationLevel: String(level),
                     escalationReason: `Automatic escalation to level ${level}`
                 });
             }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -125,7 +126,6 @@ const Profile = () => {
     principal: "Principal",
     hod: "Head of Department",
     faculty: "Faculty",
-    cr: "Class Representative",
     maintenance_staff: "Maintenance Staff",
   };
 
@@ -141,8 +141,20 @@ const Profile = () => {
             </div>
 
             {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-accent" />
+              <div className="space-y-6">
+                <div className="glass-panel p-6 rounded-2xl border border-white/10 space-y-4">
+                  <Skeleton className="h-6 w-32" />
+                  <Skeleton className="h-4 w-48" />
+                  <div className="flex gap-2">
+                    <Skeleton className="h-8 w-24 rounded-full" />
+                    <Skeleton className="h-8 w-24 rounded-full" />
+                  </div>
+                </div>
+                <div className="glass-panel p-6 rounded-2xl border border-white/10 space-y-4">
+                  <Skeleton className="h-6 w-44" />
+                  <Skeleton className="h-10 w-full rounded-xl" />
+                  <Skeleton className="h-10 w-full rounded-xl" />
+                </div>
               </div>
             ) : (
               <div className="space-y-6">

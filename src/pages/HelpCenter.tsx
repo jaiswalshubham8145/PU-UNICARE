@@ -156,7 +156,7 @@ export default function HelpCenter() {
                             </div>
                         </CardContent>
                     </Card>
-                    <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0 cursor-pointer hover:shadow-lg transition-shadow">
+                    <Card className="bg-gradient-to-br from-[#1F3F73] to-[#12302F] text-white border-0 cursor-pointer hover:shadow-lg transition-shadow">
                         <CardContent className="p-4 flex items-center gap-3">
                             <User className="h-8 w-8 opacity-80" />
                             <div>
@@ -220,7 +220,7 @@ export default function HelpCenter() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
                 >
-                    <Card className="bg-gradient-to-r from-primary/10 to-purple-500/10 border-0">
+                    <Card className="bg-gradient-to-r from-primary/10 to-[#C2A05A]/15 border-0">
                         <CardContent className="p-8 text-center">
                             <h3 className="text-2xl font-bold text-gray-900 mb-2">
                                 Still Need Help?

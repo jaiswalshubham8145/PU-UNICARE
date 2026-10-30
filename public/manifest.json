@@ -1,27 +1,51 @@
 {
   "name": "PU UNICARE - Parul University Maintenance System",
   "short_name": "PU UNICARE",
-  "description": "AI-powered maintenance complaint management platform for Parul University",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#0a0a0f",
-  "theme_color": "#7c3aed",
-  "orientation": "portrait-primary",
+  "description": "Official AI-powered maintenance complaint and facility resolution platform for Parul University",
+  "start_url": "/?source=pwa",
   "scope": "/",
+  "id": "/?source=pwa",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#060F10",
+  "theme_color": "#060F10",
   "lang": "en",
-  "categories": ["education", "utilities", "productivity"],
+  "dir": "ltr",
+  "categories": [
+    "education",
+    "utilities",
+    "productivity",
+    "lifestyle"
+  ],
   "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "screenshots": [
@@ -30,34 +54,45 @@
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "PU UNICARE Dashboard"
+      "label": "PU UNICARE Campus Maintenance Portal"
     },
     {
       "src": "/screenshot-narrow.png",
       "sizes": "720x1280",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "PU UNICARE Mobile"
+      "label": "PU UNICARE Mobile App"
     }
   ],
   "shortcuts": [
     {
       "name": "Register Complaint",
-      "short_name": "Register",
+      "short_name": "File Issue",
       "url": "/register-complaint",
-      "description": "Register a new maintenance complaint"
+      "description": "Register a new campus maintenance complaint with AI assistance",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Track Complaint",
+      "name": "Track Status",
       "short_name": "Track",
       "url": "/track",
-      "description": "Track an existing complaint"
+      "description": "Track existing complaint resolution status live",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Dashboard",
+      "name": "AI Voice Complaint",
+      "short_name": "Voice File",
+      "url": "/?action=voice-complaint",
+      "description": "File an instant complaint using multi-lingual speech recognition",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Staff Dashboard",
       "short_name": "Dashboard",
       "url": "/dashboard/faculty",
-      "description": "Open your dashboard"
+      "description": "Open your department maintenance dashboard",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
-  ]
+  ],
+  "prefer_related_applications": false
 }

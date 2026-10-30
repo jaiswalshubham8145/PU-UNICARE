@@ -4,14 +4,14 @@ const steps = [
   {
     icon: FileText,
     title: "Submit Complaint",
-    description: "Faculty or authorized CR submits maintenance request with details, location, priority, and photo/video evidence.",
+    description: "Faculty or staff submits maintenance request with details, location, priority, and photo/video evidence.",
     color: "bg-blue-500",
   },
   {
     icon: Send,
     title: "Auto Notifications",
     description: "Instant alerts sent to HOD, Principal, and Maintenance Cell via Email, SMS, and WhatsApp.",
-    color: "bg-purple-500",
+    color: "bg-[#1F3F73]",
   },
   {
     icon: UserCheck,
@@ -37,19 +37,19 @@ const WorkflowSection = () => {
   return (
     <section className="py-24 relative overflow-hidden">
       {/* Premium overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-violet-950/5 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#060F10]/20 to-transparent pointer-events-none" />
 
       <div className="container mx-auto px-6 relative z-10">
         {/* Header */}
         <div className="text-center mb-16">
-          <span className="inline-block px-6 py-2.5 glass-panel text-violet-300 rounded-full text-sm font-bold tracking-widest uppercase mb-6 border-violet-400/20">
+          <span className="inline-block px-6 py-2.5 glass-panel text-[#C2A05A] rounded-full text-xs font-semibold tracking-[0.25em] uppercase mb-6 border-[#C2A05A]/25 font-mono">
             How It Works
           </span>
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+          <h2 className="font-display text-4xl md:text-5xl font-black mb-4 tracking-tight">
             <span className="text-gradient-royal">Streamlined Complaint</span>{" "}
-            <span className="text-gradient-gold">Workflow</span>
+            <span className="text-gradient-gold italic-editorial font-normal">Workflow</span>
           </h2>
-          <p className="text-blue-100/80 max-w-2xl mx-auto font-medium">
+          <p className="text-[#A9B5AC] max-w-2xl mx-auto font-medium text-lg font-sans">
             From submission to resolution — every step is tracked, transparent, and accountable.
           </p>
         </div>

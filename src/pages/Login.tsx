@@ -174,16 +174,16 @@ const Login = () => {
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4">
           <div className="max-w-md mx-auto">
-            <div className="glass-panel-dark p-8 rounded-3xl animate-fade-in border-white/10">
+            <div className="glass-panel-dark p-8 rounded-3xl animate-fade-in border-emerald-400/35 shadow-[0_15px_50px_rgba(0,0,0,0.7),0_0_45px_rgba(52,211,153,0.3)]">
               {/* Header */}
               <div className="text-center mb-10">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500 via-purple-500 to-violet-600 mx-auto flex items-center justify-center mb-6 shadow-[0_0_40px_rgba(139,92,246,0.4)]">
-                  <Shield className="w-10 h-10 text-white" />
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#2ECC71] via-[#164340] to-[#1F3F73] mx-auto flex items-center justify-center mb-6 shadow-[0_0_45px_rgba(52,211,153,0.55)] border border-emerald-400/50">
+                  <Shield className="w-10 h-10 text-[#EDE3CC]" />
                 </div>
                 <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
                   {isSignUp ? t('auth.signup') : t('dashboard.welcome')}
                 </h1>
-                <p className="text-violet-200/80 text-sm tracking-wide">
+                <p className="text-[#A9B5AC] text-sm tracking-wide">
                   {isSignUp ? "Register for a UNICARE account" : "Sign in to your premium portal"}
                 </p>
               </div>
@@ -193,7 +193,7 @@ const Login = () => {
                 {isSignUp && (
                   <div>
                     <Label className="flex items-center gap-2 mb-2 text-white">
-                      <User className="w-4 h-4 text-violet-400" />
+                      <User className="w-4 h-4 text-[#C2A05A]" />
                       Full Name
                     </Label>
                     <Input
@@ -209,7 +209,7 @@ const Login = () => {
 
                 <div>
                   <Label className="flex items-center gap-2 mb-2 text-white">
-                    <Mail className="w-4 h-4 text-violet-400" />
+                    <Mail className="w-4 h-4 text-[#C2A05A]" />
                     University Email
                   </Label>
                   <Input
@@ -224,7 +224,7 @@ const Login = () => {
 
                 <div>
                   <Label className="flex items-center gap-2 mb-2 text-white">
-                    <Lock className="w-4 h-4 text-violet-400" />
+                    <Lock className="w-4 h-4 text-[#C2A05A]" />
                     Password
                   </Label>
                   <div className="relative">
@@ -249,7 +249,7 @@ const Login = () => {
                 {isSignUp && (
                   <div>
                     <Label className="flex items-center gap-2 mb-2 text-white">
-                      <Lock className="w-4 h-4 text-violet-400" />
+                      <Lock className="w-4 h-4 text-[#C2A05A]" />
                       Confirm Password
                     </Label>
                     <Input
@@ -266,7 +266,7 @@ const Login = () => {
                 {isSignUp && (
                   <div>
                     <Label className="flex items-center gap-2 mb-2 text-white">
-                      <User className="w-4 h-4 text-violet-400" />
+                      <User className="w-4 h-4 text-[#C2A05A]" />
                       Role
                     </Label>
                     <select
@@ -277,7 +277,6 @@ const Login = () => {
                     >
                       <option value="" className="bg-slate-900 text-slate-300">Select your role</option>
                       <option value="faculty" className="bg-slate-900">Faculty</option>
-                      <option value="cr" className="bg-slate-900">Class Representative</option>
                       <option value="maintenance_staff" className="bg-slate-900">Maintenance Staff</option>
                       <option value="hod" className="bg-slate-900">Head of Department</option>
                       <option value="principal" className="bg-slate-900">Principal</option>
@@ -299,7 +298,7 @@ const Login = () => {
                 <div className="space-y-3">
                   <Button
                     type="submit"
-                    className="w-full h-12 text-lg font-bold bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white shadow-[0_0_30px_rgba(139,92,246,0.4)] transition-all hover:scale-[1.02] hover:shadow-[0_0_40px_rgba(139,92,246,0.5)] rounded-xl"
+                    className="w-full h-12 text-lg font-bold bg-gradient-to-r from-[#C2A05A] via-[#E0C88B] to-[#C2A05A] hover:from-[#d2ba7a] hover:via-[#f5e6b8] hover:to-[#d2ba7a] text-[#060F10] shadow-[0_0_40px_rgba(224,200,139,0.55)] transition-all hover:scale-[1.02] hover:shadow-[0_0_65px_rgba(224,200,139,0.85)] rounded-xl"
                     disabled={isLoading}
                   >
                     {isLoading ? (

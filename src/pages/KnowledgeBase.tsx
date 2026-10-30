@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -154,10 +155,19 @@ const KnowledgeBase = () => {
                     <div className="max-w-3xl mx-auto">
                         <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
                             {searchQuery ? "Search Results" : "Frequently Asked Questions"}
-                            {loadingArticles && <Loader2 className="w-4 h-4 animate-spin" />}
+
                         </h2>
 
-                        {articles && articles.length > 0 ? (
+                        {loadingArticles ? (
+                            <div className="space-y-4">
+                                {Array.from({ length: 4 }).map((_, i) => (
+                                    <div key={i} className="border border-border/50 rounded-xl p-5 bg-card/30 space-y-2.5">
+                                        <Skeleton className="h-6 w-3/4" />
+                                        <Skeleton className="h-4 w-1/2" />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : articles && articles.length > 0 ? (
                             <Accordion type="single" collapsible className="space-y-4">
                                 {articles.map((article) => (
                                     <AccordionItem

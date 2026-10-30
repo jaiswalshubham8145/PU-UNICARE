@@ -1,5 +1,6 @@
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { TableRowsSkeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import {
     Clock,
@@ -200,8 +201,8 @@ const HODPendingComplaints = () => {
                         </h2>
 
                         {loadingDeptComplaints ? (
-                            <div className="flex justify-center py-10">
-                                <Loader2 className="w-6 h-6 animate-spin text-accent" />
+                            <div className="py-4">
+                                <TableRowsSkeleton rows={4} />
                             </div>
                         ) : pendingComplaints.length === 0 ? (
                             <div className="text-center py-10">

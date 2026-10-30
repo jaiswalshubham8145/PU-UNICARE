@@ -5,6 +5,8 @@ import { Database } from "@/integrations/supabase/types";
 import { TABLES } from "@/config/constants";
 import { sendComplaintEmail, ComplaintEmailData } from "@/services/emailService";
 import autoAssignmentEngine from "@/services/AutoAssignmentEngine";
+import { fireCelebrationConfetti } from "@/utils/confetti";
+import { PARUL_CAMPUS_BUILDINGS } from "@/data/campusBuildings";
 
 type ComplaintPriority = Database['public']['Enums']['complaint_priority'];
 type ComplaintStatus = Database['public']['Enums']['complaint_status'];
@@ -199,6 +201,7 @@ export const useComplaints = () => {
       queryClient.invalidateQueries({ queryKey: ["department-complaints"] });
       queryClient.invalidateQueries({ queryKey: ["all-complaints"] });
       queryClient.invalidateQueries({ queryKey: ["complaint-stats"] });
+      fireCelebrationConfetti();
     },
   });
 
@@ -338,7 +341,25 @@ export const useBuildings = () => {
         .order("category", { ascending: true })
         .order("name", { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.warn("Could not query buildings from remote DB, falling back to verified Parul University campus dataset:", error);
+      }
+
+      // Check if DB contains outdated hypothetical entries (e.g. Poultry Farm / Oceanography Block)
+      const isLegacyData = data && data.length > 0 && data.some(b => b.name === 'Poultry Farm' || b.name === 'Oceanography Block');
+
+      if (!data || data.length === 0 || isLegacyData) {
+        return PARUL_CAMPUS_BUILDINGS.map(b => {
+          const matchedDbRow = data?.find(d => d.name.toLowerCase() === b.name.toLowerCase());
+          return {
+            id: matchedDbRow?.id || b.id,
+            name: b.name,
+            category: b.category,
+            created_at: matchedDbRow?.created_at || new Date().toISOString()
+          };
+        });
+      }
+
       return data;
     },
   });

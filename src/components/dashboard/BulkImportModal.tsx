@@ -6,9 +6,12 @@ import Papa from "papaparse";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { useDepartments } from "@/hooks/useComplaints";
+import { Database } from "@/integrations/supabase/types";
 
 export const BulkImportModal = () => {
   const { user } = useAuth();
+  const { data: departments } = useDepartments();
   const [isOpen, setIsOpen] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -21,6 +24,11 @@ export const BulkImportModal = () => {
 
     if (!file.name.endsWith('.csv')) {
       toast.error("Please upload a valid CSV file");
+      return;
+    }
+
+    if (!user) {
+      toast.error("You must be logged in to import complaints");
       return;
     }
 
@@ -40,18 +48,24 @@ export const BulkImportModal = () => {
 
           // Process in batches to not overwhelm Supabase
           const batchSize = 50;
+          const defaultDeptId = departments?.[0]?.id || "";
+
           for (let i = 0; i < data.length; i += batchSize) {
-            const batch = data.slice(i, i + batchSize).map(row => ({
-              complaint_number: row.complaint_number || `UC-IMP-${Math.floor(Math.random() * 100000)}`,
-              title: row.title || 'Imported Complaint',
-              description: row.description || 'Imported from legacy system',
-              priority: row.priority?.toLowerCase() || 'medium',
-              status: row.status?.toLowerCase() || 'pending',
-              location: row.location || 'Unknown',
-              submitted_by: user?.id,
-              // We'd ideally map department names to UUIDs here, 
-              // but for MVP we skip or leave null if not provided as UUID.
-            }));
+            const batch: Database['public']['Tables']['complaints']['Insert'][] = data.slice(i, i + batchSize).map(row => {
+              const matchedDept = departments?.find(
+                d => d.id === row.department_id || d.name.toLowerCase() === (row.department || row.department_name || '').toLowerCase()
+              );
+              return {
+                complaint_number: row.complaint_number || `UC-IMP-${Math.floor(Math.random() * 100000)}`,
+                title: row.title || 'Imported Complaint',
+                description: row.description || 'Imported from legacy system',
+                priority: (['low', 'medium', 'high', 'critical'].includes(row.priority?.toLowerCase()) ? row.priority.toLowerCase() : 'medium') as any,
+                status: (['pending', 'acknowledged', 'approved', 'in_progress', 'on_hold', 'completed', 'rejected', 'closed'].includes(row.status?.toLowerCase()) ? row.status.toLowerCase() : 'pending') as any,
+                location: row.location || 'Unknown',
+                department_id: matchedDept?.id || row.department_id || defaultDeptId,
+                submitted_by: user.id,
+              };
+            });
 
             const { error } = await supabase.from('complaints').insert(batch);
             

@@ -41,6 +41,7 @@ ngrok*.zip
 .gemini/
 
 # Project temporary / test files
+*.tsbuildinfo
 supabase/.temp/
 temp_docx/
 test-*.pdf

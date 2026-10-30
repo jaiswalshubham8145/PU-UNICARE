@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { PageLoadingSkeleton } from "@/components/ui/skeleton";
 
 // Public Pages
 const Index = lazy(() => import("./pages/Index"));
@@ -37,7 +38,6 @@ const HODDashboard = lazy(() => import("./pages/dashboard/HODDashboard"));
 const AdminDashboard = lazy(() => import("./pages/dashboard/AdminDashboard"));
 const MaintenanceStaffDashboard = lazy(() => import("./pages/dashboard/MaintenanceStaffDashboard"));
 const PrincipalDashboard = lazy(() => import("./pages/dashboard/PrincipalDashboard"));
-const CRDashboard = lazy(() => import("./pages/dashboard/CRDashboard"));
 const AdminUserManagement = lazy(() => import("./pages/dashboard/AdminUserManagement"));
 const HODPendingComplaints = lazy(() => import("./pages/dashboard/HODPendingComplaints"));
 const HODInProgressComplaints = lazy(() => import("./pages/dashboard/HODInProgressComplaints"));
@@ -56,14 +56,7 @@ const MaintenanceInProgressComplaints = lazy(() => import("./pages/dashboard/Mai
 const MaintenanceOnHoldComplaints = lazy(() => import("./pages/dashboard/MaintenanceOnHoldComplaints"));
 const MaintenanceCompletedComplaints = lazy(() => import("./pages/dashboard/MaintenanceCompletedComplaints"));
 
-const LoadingFallback = () => (
-  <div className="flex h-screen w-full items-center justify-center bg-background" role="status" aria-label="Loading page">
-    <div className="flex flex-col items-center gap-4">
-      <Loader2 className="h-10 w-10 animate-spin text-primary" aria-hidden="true" />
-      <span className="text-sm text-muted-foreground">Loading...</span>
-    </div>
-  </div>
-);
+const LoadingFallback = () => <PageLoadingSkeleton />;
 
 const RouteErrorFallback = ({ error }: { error?: Error }) => (
   <div className="flex h-screen w-full items-center justify-center bg-background p-4">
@@ -113,9 +106,7 @@ const AppRoutes = () => {
 
             {/* Faculty Dashboard */}
             <Route path="/dashboard/faculty" element={<ProtectedRoute allowedRoles={["faculty"]}><FacultyDashboard /></ProtectedRoute>} />
-
-            {/* CR Dashboard */}
-            <Route path="/dashboard/cr" element={<ProtectedRoute allowedRoles={["cr", "admin"]}><CRDashboard /></ProtectedRoute>} />
+            <Route path="/dashboard/cr" element={<Navigate to="/dashboard/faculty" replace />} />
 
             {/* HOD Dashboard */}
             <Route path="/dashboard/hod" element={<ProtectedRoute allowedRoles={["hod", "admin", "principal"]}><HODDashboard /></ProtectedRoute>} />

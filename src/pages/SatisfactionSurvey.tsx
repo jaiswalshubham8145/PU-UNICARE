@@ -36,6 +36,22 @@ const SatisfactionSurvey = () => {
 
     setIsSubmitting(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      let updatedBy = user?.id;
+      if (!updatedBy) {
+        const { data: complaintData } = await supabase
+          .from("complaints")
+          .select("submitted_by")
+          .eq("id", complaintId)
+          .single();
+        updatedBy = complaintData?.submitted_by;
+      }
+
+      if (!updatedBy) {
+        toast.error("Could not determine user for survey submission");
+        return;
+      }
+
       // For this MVP, we save feedback in complaint_updates
       const { error } = await supabase
         .from("complaint_updates")
@@ -43,6 +59,7 @@ const SatisfactionSurvey = () => {
           complaint_id: complaintId,
           status: "closed",
           note: `User Satisfaction Rating: ${rating}/5 Stars.\nFeedback: ${feedback}`,
+          updated_by: updatedBy,
         });
 
       if (error) throw error;

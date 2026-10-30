@@ -67,6 +67,12 @@ interface SMSConfig {
 async function getSMSConfig(): Promise<SMSConfig> {
     // Check Vite environment variables first
     const viteEnv = typeof import.meta !== 'undefined' ? import.meta.env : null;
+
+    // In test environment, bypass external network calls unless explicitly configured
+    if (viteEnv?.MODE === 'test' && !viteEnv?.VITE_SMS_PROVIDER) {
+        return { provider: 'none' };
+    }
+
     const provider = viteEnv?.VITE_SMS_PROVIDER || 'fast2sms'; // Default to fast2sms for this project
 
     if (provider === 'none') {

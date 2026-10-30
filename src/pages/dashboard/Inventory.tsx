@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableRowsSkeleton } from "@/components/ui/skeleton";
 import { Package, Plus, Search, AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/layout/Navbar";
@@ -58,7 +59,7 @@ const Inventory = () => {
       console.error(error);
       toast.error("Failed to load inventory. Make sure DB migration is applied.");
     } else {
-      setItems(data as InventoryItem[]);
+      setItems((data as unknown as InventoryItem[]) || []);
     }
     setLoading(false);
   };
@@ -69,7 +70,15 @@ const Inventory = () => {
 
   const onSubmit = async (values: z.infer<typeof itemSchema>) => {
     try {
-      const { error } = await supabase.from("inventory_items").insert(values);
+      const insertData = {
+        name: values.name,
+        category: values.category,
+        quantity: values.quantity,
+        unit: values.unit,
+        minimum_stock: values.minimum_stock,
+        location: values.location || null,
+      };
+      const { error } = await supabase.from("inventory_items").insert(insertData);
       if (error) throw error;
       toast.success("Item added successfully");
       setIsAddOpen(false);
@@ -181,7 +190,9 @@ const Inventory = () => {
           <Card>
             <CardContent className="p-0">
               {loading ? (
-                <div className="p-12 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>
+                <div className="p-4">
+                  <TableRowsSkeleton rows={4} />
+                </div>
               ) : items.length === 0 ? (
                 <div className="p-12 text-center text-muted-foreground">
                   <Package className="w-12 h-12 mx-auto mb-4 opacity-20" />

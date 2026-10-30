@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Simple mock for supabase - just return promises for all chain methods
 const createSimpleMock = () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mock: Record<string, any> = {};
     const noop = () => mock;
     mock.select = vi.fn(() => mock);

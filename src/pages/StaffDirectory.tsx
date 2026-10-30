@@ -118,7 +118,7 @@ function StaffCard({ staff }: { staff: StaffMember }) {
                         <div className="relative">
                             <Avatar className="h-16 w-16 ring-2 ring-offset-2 ring-primary/20">
                                 <AvatarImage src={staff.avatar_url || undefined} alt={staff.full_name} />
-                                <AvatarFallback className="bg-gradient-to-br from-primary to-purple-600 text-white text-lg font-semibold">
+                                <AvatarFallback className="bg-gradient-to-br from-primary to-[#1F3F73] text-white text-lg font-semibold">
                                     {staff.full_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                                 </AvatarFallback>
                             </Avatar>
@@ -310,7 +310,6 @@ export default function StaffDirectory() {
             let availability: StaffAvailabilityRow[] = [];
             try {
                 const { data: availData } = await supabase
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     .from('staff_availability' as any)
                     .select('*')
                     .in('user_id', userIds);
@@ -449,7 +448,7 @@ export default function StaffDirectory() {
                             </div>
                         </CardContent>
                     </Card>
-                    <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0">
+                    <Card className="bg-gradient-to-br from-[#1F3F73] to-[#12302F] text-white border-0">
                         <CardContent className="p-4 flex items-center gap-4">
                             <Award className="h-10 w-10 opacity-80" />
                             <div>

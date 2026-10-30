@@ -47,14 +47,14 @@ class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
-          <div className="max-w-md w-full glass-panel-dark p-8 rounded-2xl text-center">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#060F10] via-[#0C1B1C] to-[#12302F] p-4">
+          <div className="max-w-md w-full glass-panel-dark p-8 rounded-2xl text-center border border-[#C2A05A]/20">
             <div className="w-20 h-20 rounded-full bg-red-500/20 mx-auto flex items-center justify-center mb-6">
               <AlertTriangle className="w-10 h-10 text-red-400" />
             </div>
             
             <h1 className="text-2xl font-bold text-white mb-2">Something went wrong</h1>
-            <p className="text-slate-300 mb-6">
+            <p className="text-[#A9B5AC] mb-6">
               An unexpected error occurred. Please try again or return to the home page.
             </p>
 
@@ -74,14 +74,14 @@ class ErrorBoundary extends Component<Props, State> {
               <Button
                 onClick={this.handleReset}
                 variant="outline"
-                className="flex-1 border-white/20 text-white hover:bg-white/10"
+                className="flex-1 border-white/20 text-[#EDE3CC] hover:bg-white/10"
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Try Again
               </Button>
               <Button
                 onClick={this.handleGoHome}
-                className="flex-1 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500"
+                className="flex-1 bg-gradient-to-r from-[#B8944E] via-[#C2A05A] to-[#E0C88B] hover:from-[#a5833f] hover:via-[#b3914a] hover:to-[#d2ba7a] text-[#060F10] font-bold"
               >
                 <Home className="w-4 h-4 mr-2" />
                 Go Home

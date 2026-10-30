@@ -11,7 +11,7 @@ import {
     Calendar,
     ArrowRight
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -82,7 +82,7 @@ const Notifications = () => {
                 return <MessageSquare className="h-5 w-5 text-indigo-500" />;
             case "assignment":
             case "complaint_assigned":
-                return <Calendar className="h-5 w-5 text-purple-500" />;
+                return <Calendar className="h-5 w-5 text-[#C2A05A]" />;
             case "completion":
             case "complaint_completed":
                 return <CheckCircle2 className="h-5 w-5 text-green-500" />;
@@ -98,14 +98,14 @@ const Notifications = () => {
         switch (type) {
             case "new_complaint": return "bg-blue-500/10 border-blue-500/20";
             case "status_update": return "bg-indigo-500/10 border-indigo-500/20";
-            case "assignment": return "bg-purple-500/10 border-purple-500/20";
+            case "assignment": return "bg-[#C2A05A]/10 border-[#C2A05A]/25";
             case "completion": return "bg-green-500/10 border-green-500/20";
             case "sla_breach": return "bg-red-500/10 border-red-500/20";
             default: return "bg-gray-500/10 border-gray-500/20";
         }
     };
 
-    const containerVariants = {
+    const containerVariants: Variants = {
         hidden: { opacity: 0 },
         visible: {
             opacity: 1,
@@ -113,12 +113,12 @@ const Notifications = () => {
         }
     };
 
-    const itemVariants = {
+    const itemVariants: Variants = {
         hidden: { y: 20, opacity: 0 },
         visible: {
             y: 0,
             opacity: 1,
-            transition: { type: "spring", stiffness: 100 }
+            transition: { type: "spring" as const, stiffness: 100 }
         },
         exit: {
             x: -20,

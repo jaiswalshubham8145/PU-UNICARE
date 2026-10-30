@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 
-type Language = 'en' | 'hi';
+export type Language = 'en' | 'hi' | 'gu';
 
 interface I18nContextType {
   language: Language;
@@ -14,7 +14,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.home': 'Home',
     'nav.about': 'About',
     'nav.maintenance': 'Maintenance',
-    'nav.track': 'Track Complaint',
+    'nav.track': 'Track',
     'nav.help': 'Help',
     'nav.contact': 'Contact',
     'nav.login': 'Login',
@@ -109,7 +109,6 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Roles
     'role.faculty': 'Faculty',
-    'role.cr': 'Class Representative',
     'role.hod': 'Head of Department',
     'role.principal': 'Principal',
     'role.admin': 'Administrator',
@@ -132,7 +131,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.home': 'होम',
     'nav.about': 'हमारे बारे में',
     'nav.maintenance': 'रखरखाव',
-    'nav.track': 'शिकायत ट्रैक करें',
+    'nav.track': 'ट्रैक',
     'nav.help': 'सहायता',
     'nav.contact': 'संपर्क',
     'nav.login': 'लॉगिन',
@@ -227,7 +226,6 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Roles
     'role.faculty': 'संकाय',
-    'role.cr': 'क्लास प्रतिनिधि',
     'role.hod': 'विभागाध्यक्ष',
     'role.principal': 'प्रधानाचार्य',
     'role.admin': 'प्रशासक',
@@ -244,6 +242,123 @@ const translations: Record<Language, Record<string, string>> = {
     'a11y.menu': 'मेनू',
     'a11y.close': 'बंद करें',
     'a11y.open': 'खोलें',
+  },
+  gu: {
+    // Navigation
+    'nav.home': 'હોમ',
+    'nav.about': 'અમારા વિશે',
+    'nav.maintenance': 'મેન્ટેનન્સ',
+    'nav.track': 'ટ્રેક',
+    'nav.help': 'મદદ',
+    'nav.contact': 'સંપર્ક',
+    'nav.login': 'લૉગિન',
+    'nav.signup': 'સાઇન અપ',
+    'nav.dashboard': 'ડેશબોર્ડ',
+    'nav.profile': 'પ્રોફાઇલ',
+    'nav.settings': 'સેટિંગ્સ',
+    'nav.notifications': 'સૂચનાઓ',
+    'nav.logout': 'સાઇન આઉટ',
+
+    // Common
+    'common.loading': 'લોડ થઈ રહ્યું છે...',
+    'common.error': 'કંઈક ખોટું થયું',
+    'common.retry': 'ફરી પ્રયાસ કરો',
+    'common.save': 'સાચવો',
+    'common.cancel': 'રદ કરો',
+    'common.submit': 'સબમિટ કરો',
+    'common.search': 'શોધો...',
+    'common.filter': 'ફિલ્ટર',
+    'common.export': 'એક્સપોર્ટ',
+    'common.delete': 'કાઢી નાખો',
+    'common.edit': 'સંપાદિત કરો',
+    'common.view': 'જુઓ',
+    'common.close': 'બંધ કરો',
+    'common.back': 'પાછા જાઓ',
+    'common.next': 'આગળ',
+    'common.previous': 'પાછળ',
+    'common.noResults': 'કોઈ પરિણામ મળ્યા નથી',
+    'common.showing': 'દર્શાવી રહ્યાં છે',
+    'common.of': 'માંથી',
+    'common.page': 'પૃષ્ઠ',
+
+    // Home
+    'home.hero.title': 'સ્માર્ટ કેમ્પસ મેન્ટેનન્સ',
+    'home.hero.subtitle': 'પારુલ યુનિવર્સિટી માટે AI-આધારિત ફરિયાદ નિવારણ વ્યવસ્થા',
+    'home.hero.cta': 'સમસ્યા નોંધાવો',
+    'home.hero.track': 'ફરિયાદ ટ્રેક કરો',
+
+    // Complaint
+    'complaint.register': 'ફરિયાદ નોંધાવો',
+    'complaint.track': 'ફરિયાદ ટ્રેક કરો',
+    'complaint.number': 'ફરિયાદ નંબર',
+    'complaint.title': 'શીર્ષક',
+    'complaint.description': 'વર્ણન',
+    'complaint.category': 'શ્રેણી',
+    'complaint.priority': 'પ્રાથમિકતા',
+    'complaint.status': 'સ્થિતિ',
+    'complaint.location': 'સ્થળ',
+    'complaint.department': 'વિભાગ',
+    'complaint.submit': 'ફરિયાદ સબમિટ કરો',
+    'complaint.trackingId': 'ટ્રેકિંગ આઈડી',
+
+    // Status
+    'status.pending': 'બાકી',
+    'status.approved': 'મંજૂર થયેલ',
+    'status.inProgress': 'પ્રગતિમાં',
+    'status.onHold': 'સ્થગિત',
+    'status.completed': 'પૂર્ણ',
+    'status.rejected': 'નકારેલ',
+    'status.closed': 'બંધ',
+    'status.escalated': 'ઉચ્ચ સ્તરે મોકલેલ',
+
+    // Priority
+    'priority.low': 'સામાન્ય',
+    'priority.medium': 'મધ્યમ',
+    'priority.high': 'ઉચ્ચ',
+    'priority.critical': 'અતિ ગંભીર',
+
+    // Dashboard
+    'dashboard.welcome': 'સ્વાગત છે',
+    'dashboard.totalComplaints': 'કુલ ફરિયાદો',
+    'dashboard.pending': 'બાકી',
+    'dashboard.inProgress': 'પ્રગતિમાં',
+    'dashboard.completed': 'પૂર્ણ',
+    'dashboard.recentActivity': 'તાજેતરની પ્રવૃત્તિ',
+    'dashboard.quickActions': 'ઝડપી કાર્યો',
+
+    // Auth
+    'auth.login': 'સાઇન ઇન',
+    'auth.signup': 'ખાતું બનાવો',
+    'auth.email': 'યુનિવર્સિટી ઇમેઇલ',
+    'auth.password': 'પાસવર્ડ',
+    'auth.confirmPassword': 'પાસવર્ડની પુષ્ટિ કરો',
+    'auth.fullName': 'પૂરું નામ',
+    'auth.role': 'ભૂમિકા',
+    'auth.forgotPassword': 'પાસવર્ડ ભૂલી ગયા?',
+    'auth.noAccount': 'ખાતું નથી?',
+    'auth.hasAccount': 'પહેલેથી ખાતું છે?',
+    'auth.rememberMe': 'મને યાદ રાખો',
+    'auth.resetLink': 'રીસેટ લિંક મોકલો',
+    'auth.checkEmail': 'તમારું ઇમેઇલ તપાસો',
+
+    // Roles
+    'role.faculty': 'ફેકલ્ટી',
+    'role.hod': 'વિભાગના વડા (HOD)',
+    'role.principal': 'પ્રિન્સિપાલ',
+    'role.admin': 'એડમિનિસ્ટ્રેટર',
+    'role.maintenance': 'મેન્ટેનન્સ સ્ટાફ',
+
+    // Footer
+    'footer.quickLinks': 'ઝડપી લિંક્સ',
+    'footer.contact': 'સંપર્ક કરો',
+    'footer.address': 'પારુલ યુનિવર્સિટી, વડોદરા, ગુજરાત',
+    'footer.rights': 'સર્વાધિકાર સુરક્ષિત.',
+
+    // Accessibility
+    'a11y.skipToContent': 'મુખ્ય સામગ્રી પર જાઓ',
+    'a11y.menu': 'મેનૂ',
+    'a11y.close': 'બંધ કરો',
+    'a11y.open': 'ખોલો',
   },
 };
 

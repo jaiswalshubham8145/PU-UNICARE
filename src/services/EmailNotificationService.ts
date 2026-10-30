@@ -227,7 +227,6 @@ export async function sendResolutionEmail(
 
     // Schedule feedback request via database (server-side cron handles the delay)
     try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await supabase.from('scheduled_emails' as any).insert({
             recipient_email: complainantEmail,
             recipient_name: complainantName,

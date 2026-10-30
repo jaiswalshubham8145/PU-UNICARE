@@ -3,6 +3,7 @@ import Footer from "@/components/layout/Footer";
 import HeroSection from "@/components/home/HeroSection";
 import FeaturesGrid from "@/components/home/FeaturesGrid";
 import MaintenanceCategories from "@/components/home/MaintenanceCategories";
+import DiagnosticSimulator from "@/components/home/DiagnosticSimulator";
 import RolesSection from "@/components/home/RolesSection";
 import WorkflowSection from "@/components/home/WorkflowSection";
 import CTASection from "@/components/home/CTASection";
@@ -15,6 +16,7 @@ const Index = () => {
         <HeroSection />
         <FeaturesGrid />
         <MaintenanceCategories />
+        <DiagnosticSimulator />
         <RolesSection />
         <WorkflowSection />
         <CTASection />

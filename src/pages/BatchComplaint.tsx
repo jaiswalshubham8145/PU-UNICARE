@@ -178,7 +178,7 @@ const BatchComplaint = () => {
                           <FormLabel className="flex items-center gap-2"><Building2 className="w-3 h-3" /> Building *</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value} disabled={loadingBuildings}>
                             <FormControl><SelectTrigger><SelectValue placeholder="Select building" /></SelectTrigger></FormControl>
-                            <SelectContent>
+                            <SelectContent className="max-h-80">
                               {buildings?.map((building) => <SelectItem key={building.id} value={building.id}>{building.name}</SelectItem>)}
                             </SelectContent>
                           </Select>

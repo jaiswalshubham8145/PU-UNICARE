@@ -29,8 +29,9 @@ const BackgroundVideo = () => {
             >
                 <source src={currentVideo} type="video/mp4" />
             </video>
-            {/* Overlay to ensure text readability */}
-            <div className="absolute inset-0 bg-white/30 dark:bg-black/70 backdrop-blur-[2px] transition-colors duration-500" />
+            {/* Overlay to ensure text readability + rich radiant dark mode ambient glows */}
+            <div className="absolute inset-0 bg-[#F6F0E1]/50 dark:bg-[#060F10]/75 backdrop-blur-[2px] transition-colors duration-500" />
+            <div className="absolute inset-0 dark:bg-[radial-gradient(circle_at_50%_0%,rgba(52,211,153,0.18),transparent_55%),radial-gradient(circle_at_85%_55%,rgba(224,200,139,0.12),transparent_45%),radial-gradient(circle_at_15%_75%,rgba(52,211,153,0.15),transparent_50%)] pointer-events-none transition-opacity duration-500" />
         </div>
     );
 };

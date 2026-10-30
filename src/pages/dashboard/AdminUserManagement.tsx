@@ -1,3 +1,4 @@
+import { TableRowsSkeleton } from "@/components/ui/skeleton";
 import { useState, useMemo } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -22,12 +23,11 @@ type UserWithRoles = Database['public']['Tables']['profiles']['Row'] & {
   user_roles: Database['public']['Tables']['user_roles']['Row'][];
 };
 
-const roleLabels: Record<AppRole, string> = {
+const roleLabels: Partial<Record<AppRole, string>> = {
   admin: "Administrator",
   principal: "Principal",
   hod: "Head of Department",
   faculty: "Faculty",
-  cr: "Class Representative",
   maintenance_staff: "Maintenance Staff",
 };
 
@@ -36,7 +36,6 @@ const roleColors: Record<string, string> = {
   principal: "bg-accent/10 text-accent",
   hod: "bg-info/10 text-info",
   faculty: "bg-success/10 text-success",
-  cr: "bg-warning/10 text-warning",
   maintenance_staff: "bg-primary/10 text-primary",
 };
 
@@ -221,9 +220,7 @@ const AdminUserManagement = () => {
 
             <div className="overflow-x-auto">
               {isLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-8 h-8 animate-spin text-accent" />
-                </div>
+                <div className="py-4"><TableRowsSkeleton rows={4} /></div>
               ) : paginatedUsers.length === 0 ? (
                 <div className="text-center py-12">
                   <Users className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />

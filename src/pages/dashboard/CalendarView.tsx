@@ -5,6 +5,7 @@ import { enUS } from "date-fns/locale/en-US";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { Card, CardContent } from "@/components/ui/card";
 import Navbar from "@/components/layout/Navbar";
+import { PageLoadingSkeleton } from "@/components/ui/skeleton";
 import Footer from "@/components/layout/Footer";
 import { useComplaints } from "@/hooks/useComplaints";
 import { useQuery } from "@tanstack/react-query";
@@ -42,15 +43,11 @@ export const CalendarView = () => {
   });
 
   if (loadingAllComplaints || loadingMaintenance) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <Loader2 className="w-10 h-10 animate-spin text-primary" />
-      </div>
-    );
+    return <PageLoadingSkeleton />;
   }
 
   // Format events
-  const events = [];
+  const events: any[] = [];
 
   // Add Complaints (Expected Resolution Date)
   if (allComplaints) {
@@ -93,7 +90,7 @@ export const CalendarView = () => {
       else if (event.data.priority === "medium") backgroundColor = "#eab308";
       else backgroundColor = "#22c55e";
     } else if (event.type === "maintenance") {
-      backgroundColor = "#8b5cf6"; // purple for maintenance
+      backgroundColor = "#1F3F73"; // sapphire for maintenance
     }
 
     return {

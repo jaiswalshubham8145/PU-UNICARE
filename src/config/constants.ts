@@ -1,18 +1,16 @@
-export const ALLOWED_ROLES_FOR_COMPLAINTS = [
+export const ALLOWED_ROLES_FOR_COMPLAINTS: readonly string[] = [
     'faculty',
-    'cr',
     'admin',
     'principal',
     'hod',
     'maintenance_staff'
-] as const;
+];
 
 export const APP_USER_ROLES = [
     'admin',
     'principal',
     'hod',
     'faculty',
-    'cr',
     'maintenance_staff'
 ] as const;
 

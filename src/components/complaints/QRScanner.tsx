@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Html5Qrcode } from "html5-qrcode";
+import { Html5Qrcode, CameraDevice } from "html5-qrcode";
 import { Button } from "@/components/ui/button";
 import { X, Camera, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
@@ -10,7 +10,7 @@ interface QRScannerProps {
 }
 
 export const QRScanner = ({ onScanSuccess, onClose }: QRScannerProps) => {
-  const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
+  const [cameras, setCameras] = useState<CameraDevice[]>([]);
   const [activeCameraId, setActiveCameraId] = useState<string>("");
   const [isScanning, setIsScanning] = useState(false);
   const scannerRef = useRef<Html5Qrcode | null>(null);

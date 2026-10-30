@@ -24,7 +24,7 @@ const roleConfig = {
     title: "Principal",
     description: "Oversee academic affairs and institutional management",
     icon: Crown,
-    color: "bg-purple-500",
+    color: "bg-[#1F3F73]",
   },
   hod: {
     title: "Head of Department",
@@ -37,12 +37,6 @@ const roleConfig = {
     description: "Access teaching resources and student management",
     icon: GraduationCap,
     color: "bg-green-500",
-  },
-  cr: {
-    title: "Class Representative",
-    description: "Represent student interests and manage class activities",
-    icon: UserCheck,
-    color: "bg-orange-500",
   },
   maintenance_staff: {
     title: "Maintenance Staff",

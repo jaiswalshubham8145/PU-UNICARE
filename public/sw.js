@@ -1,109 +1,193 @@
-const CACHE_NAME = 'pu-unicare-v1';
-const STATIC_CACHE = 'pu-unicare-static-v1';
-const DYNAMIC_CACHE = 'pu-unicare-dynamic-v1';
+const CACHE_VERSION = 'pu-unicare-v2';
+const STATIC_CACHE = `${CACHE_VERSION}-static`;
+const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 
-const STATIC_ASSETS = [
+const CRITICAL_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
+  '/favicon.svg',
   '/favicon.ico',
   '/icon-192.png',
   '/icon-512.png',
+  '/apple-touch-icon.png'
 ];
 
-// Install event - cache static assets
+// Install Event: cache core app shell resiliently
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
+    caches.open(STATIC_CACHE).then(async (cache) => {
+      // Use resilient allSettled to ensure service worker installs even if an asset fails
+      await Promise.allSettled(
+        CRITICAL_ASSETS.map(async (url) => {
+          try {
+            const response = await fetch(url, { cache: 'no-cache' });
+            if (response.ok) {
+              await cache.put(url, response);
+            }
+          } catch (err) {
+            // Non-blocking asset fetch failure
+            console.warn('[SW] Pre-cache skipped for:', url, err);
+          }
+        })
+      );
     })
   );
   self.skipWaiting();
 });
 
-// Activate event - clean old caches
+// Activate Event: purge stale caches and claim clients immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
+    caches.keys().then((keys) => {
       return Promise.all(
-        cacheNames
-          .filter((name) => name !== STATIC_CACHE && name !== DYNAMIC_CACHE)
-          .map((name) => caches.delete(name))
+        keys
+          .filter((key) => key.startsWith('pu-unicare') && key !== STATIC_CACHE && key !== DYNAMIC_CACHE)
+          .map((key) => caches.delete(key))
       );
     })
   );
   self.clients.claim();
 });
 
-// Fetch event - network first, fallback to cache
+// Fetch Event
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  const url = new URL(request.url);
 
-  // Skip non-GET requests
+  // Only intercept GET requests
   if (request.method !== 'GET') return;
 
-  // Skip Supabase API calls
-  if (url.hostname.includes('supabase')) return;
+  const url = new URL(request.url);
 
-  // Skip external resources
-  if (url.origin !== location.origin) return;
+  // Skip external APIs, Supabase real-time/auth/rest, and AI endpoints
+  if (
+    url.hostname.includes('supabase.co') ||
+    url.hostname.includes('generativelanguage.googleapis.com') ||
+    url.hostname.includes('fast2sms.com') ||
+    url.protocol === 'ws:' ||
+    url.protocol === 'wss:'
+  ) {
+    return;
+  }
 
-  event.respondWith(
-    caches.match(request).then((cachedResponse) => {
-      if (cachedResponse) {
-        // Return cached version, fetch update in background
-        event.waitUntil(
-          fetch(request).then((networkResponse) => {
-            if (networkResponse.ok) {
-              caches.open(DYNAMIC_CACHE).then((cache) => {
-                cache.put(request, networkResponse);
-              });
-            }
-          }).catch(() => {})
-        );
-        return cachedResponse;
-      }
-
-      // Not in cache, fetch from network
-      return fetch(request).then((networkResponse) => {
-        if (networkResponse.ok) {
-          const responseClone = networkResponse.clone();
-          caches.open(DYNAMIC_CACHE).then((cache) => {
-            cache.put(request, responseClone);
+  // 1. Navigation requests (HTML): Network first, falling back to cached index.html
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(STATIC_CACHE).then((cache) => cache.put('/index.html', clone));
+          }
+          return response;
+        })
+        .catch(async () => {
+          const cached = await caches.match('/index.html');
+          return cached || new Response('Offline - PU UNICARE', {
+            status: 503,
+            headers: { 'Content-Type': 'text/html' }
           });
-        }
-        return networkResponse;
-      }).catch(() => {
-        // Network failed, return offline page for navigation requests
-        if (request.mode === 'navigate') {
-          return caches.match('/index.html');
-        }
-        return new Response('Offline', { status: 503 });
-      });
-    })
-  );
-});
+        })
+    );
+    return;
+  }
 
-// Push notification event
-self.addEventListener('push', (event) => {
-  if (event.data) {
-    const data = event.data.json();
-    event.waitUntil(
-      self.registration.showNotification(data.title, {
-        body: data.body,
-        icon: '/icon-192.png',
-        badge: '/icon-192.png',
-        data: data.url,
+  // 2. Static Google Fonts & Fontshare: Cache first with network fallback
+  if (url.hostname.includes('fonts.googleapis.com') ||
+      url.hostname.includes('fonts.gstatic.com') ||
+      url.hostname.includes('fontshare.com')) {
+    event.respondWith(
+      caches.match(request).then((cached) => {
+        if (cached) return cached;
+        return fetch(request).then((networkRes) => {
+          if (networkRes.ok) {
+            const clone = networkRes.clone();
+            caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, clone));
+          }
+          return networkRes;
+        });
+      })
+    );
+    return;
+  }
+
+  // 3. Local Same-Origin Assets (Vite chunks, JS, CSS, images)
+  if (url.origin === location.origin) {
+    event.respondWith(
+      caches.match(request).then((cached) => {
+        if (cached) {
+          // Serve cached and refresh dynamically in background
+          fetch(request).then((networkRes) => {
+            if (networkRes && networkRes.ok) {
+              caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, networkRes));
+            }
+          }).catch(() => {});
+          return cached;
+        }
+
+        return fetch(request)
+          .then((networkRes) => {
+            if (networkRes.ok) {
+              const clone = networkRes.clone();
+              caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, clone));
+            }
+            return networkRes;
+          })
+          .catch(() => {
+            // Return placeholder or offline fallback if needed
+            return new Response('Asset not available offline', { status: 404 });
+          });
       })
     );
   }
 });
 
-// Notification click event
+// Message listener (for SKIP_WAITING updates)
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+// Push notification handling
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+  try {
+    const data = event.data.json();
+    event.waitUntil(
+      self.registration.showNotification(data.title || 'PU UNICARE Alert', {
+        body: data.body || 'New campus maintenance update.',
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
+        vibrate: [100, 50, 100],
+        data: data.url || '/'
+      })
+    );
+  } catch {
+    // Non-JSON push notification fallback
+    event.waitUntil(
+      self.registration.showNotification('PU UNICARE', {
+        body: event.data.text(),
+        icon: '/icon-192.png'
+      })
+    );
+  }
+});
+
+// Notification click handling
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+  const targetUrl = event.notification.data || '/';
   event.waitUntil(
-    clients.openWindow(event.notification.data || '/')
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes(targetUrl) && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
   );
 });

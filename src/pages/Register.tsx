@@ -121,7 +121,6 @@ const Register = () => {
                                 </SelectTrigger>
                                 <SelectContent className="bg-black/90 border-white/10 text-white backdrop-blur-xl">
                                     <SelectItem value="faculty" className="focus:bg-amber-500 focus:text-black">Faculty</SelectItem>
-                                    <SelectItem value="cr" className="focus:bg-amber-500 focus:text-black">Class Representative (CR)</SelectItem>
                                     <SelectItem value="hod" className="focus:bg-amber-500 focus:text-black">HOD</SelectItem>
                                     <SelectItem value="maintenance_staff" className="focus:bg-amber-500 focus:text-black">Maintenance Staff</SelectItem>
                                     <SelectItem value="principal" className="focus:bg-amber-500 focus:text-black">Principal</SelectItem>

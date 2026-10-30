@@ -1,3 +1,4 @@
+import { TableRowsSkeleton } from "@/components/ui/skeleton";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -78,9 +79,7 @@ const AdminPendingComplaints = () => {
                         </h2>
 
                         {loadingAllComplaints ? (
-                            <div className="flex justify-center py-10">
-                                <Loader2 className="w-6 h-6 animate-spin text-accent" />
-                            </div>
+                            <div className="py-4"><TableRowsSkeleton rows={4} /></div>
                         ) : pendingComplaints.length === 0 ? (
                             <div className="text-center py-10">
                                 <CheckCircle className="w-12 h-12 text-success/40 mx-auto mb-3" />
