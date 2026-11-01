@@ -25,6 +25,7 @@ const BackgroundVideo = () => {
                 muted
                 loop
                 playsInline
+                preload="metadata"
                 className="absolute top-0 left-0 w-full h-full object-cover opacity-100 transition-opacity duration-1000"
             >
                 <source src={currentVideo} type="video/mp4" />

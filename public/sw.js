@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'pu-unicare-v2';
+const CACHE_VERSION = 'pu-unicare-v3';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 
@@ -22,7 +22,7 @@ self.addEventListener('install', (event) => {
         CRITICAL_ASSETS.map(async (url) => {
           try {
             const response = await fetch(url, { cache: 'no-cache' });
-            if (response.ok) {
+            if (response.status === 200) {
               await cache.put(url, response);
             }
           } catch (err) {
@@ -70,14 +70,25 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Skip video/audio media streaming and Range requests
+  // Browser video streaming uses HTTP 206 (Partial Content) which Cache API explicitly forbids.
+  if (
+    request.headers.has('range') ||
+    request.destination === 'video' ||
+    request.destination === 'audio' ||
+    Boolean(url.pathname.match(/\.(mp4|webm|ogg|mp3|wav|mov)$/i))
+  ) {
+    return;
+  }
+
   // 1. Navigation requests (HTML): Network first, falling back to cached index.html
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          if (response.ok) {
+          if (response.status === 200) {
             const clone = response.clone();
-            caches.open(STATIC_CACHE).then((cache) => cache.put('/index.html', clone));
+            caches.open(STATIC_CACHE).then((cache) => cache.put('/index.html', clone)).catch(() => {});
           }
           return response;
         })
@@ -100,9 +111,9 @@ self.addEventListener('fetch', (event) => {
       caches.match(request).then((cached) => {
         if (cached) return cached;
         return fetch(request).then((networkRes) => {
-          if (networkRes.ok) {
+          if (networkRes.status === 200) {
             const clone = networkRes.clone();
-            caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, clone));
+            caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, clone)).catch(() => {});
           }
           return networkRes;
         });
@@ -118,8 +129,8 @@ self.addEventListener('fetch', (event) => {
         if (cached) {
           // Serve cached and refresh dynamically in background
           fetch(request).then((networkRes) => {
-            if (networkRes && networkRes.ok) {
-              caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, networkRes));
+            if (networkRes && networkRes.status === 200) {
+              caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, networkRes)).catch(() => {});
             }
           }).catch(() => {});
           return cached;
@@ -127,9 +138,9 @@ self.addEventListener('fetch', (event) => {
 
         return fetch(request)
           .then((networkRes) => {
-            if (networkRes.ok) {
+            if (networkRes && networkRes.status === 200) {
               const clone = networkRes.clone();
-              caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, clone));
+              caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, clone)).catch(() => {});
             }
             return networkRes;
           })
