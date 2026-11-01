@@ -23,20 +23,12 @@ import { Link } from "react-router-dom";
 import type { Database } from "@/integrations/supabase/types";
 import autoAssignmentEngine from "@/services/AutoAssignmentEngine";
 import { useQueryClient } from "@tanstack/react-query";
+import type { ComplaintWithJoins } from "@/types/complaint";
+import { priorityColors } from "@/utils/complaintStatus";
 
-type ComplaintWithJoins =
-    Database["public"]["Tables"]["complaints"]["Row"] & {
-        departments: { name: string } | null;
-        maintenance_categories: { name: string } | null;
-        buildings: { name: string } | null;
-    };
 
-const priorityColors = {
-    critical: "bg-destructive text-destructive-foreground",
-    high: "bg-priority-high text-white",
-    medium: "bg-warning text-warning-foreground",
-    low: "bg-success text-success-foreground",
-};
+
+
 
 const HODPendingComplaints = () => {
     const { user } = useAuth();

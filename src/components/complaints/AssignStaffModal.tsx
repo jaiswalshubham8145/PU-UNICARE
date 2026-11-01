@@ -14,12 +14,9 @@ import { Loader2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { motion, Variants } from "framer-motion";
 import { sendComplaintEmail, ComplaintEmailData } from "@/services/emailService";
+import type { ComplaintWithJoins } from "@/types/complaint";
 
-type ComplaintWithJoins = Database['public']['Tables']['complaints']['Row'] & {
-  departments: { name: string } | null;
-  maintenance_categories: { name: string } | null;
-  complaint_updates?: Database['public']['Tables']['complaint_updates']['Row'][];
-};
+
 
 interface AssignStaffModalProps {
   complaint?: ComplaintWithJoins | null;

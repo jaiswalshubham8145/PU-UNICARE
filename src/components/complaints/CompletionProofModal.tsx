@@ -12,12 +12,10 @@ import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
 import { motion, Variants } from "framer-motion";
 import { sendComplaintEmail, ComplaintEmailData } from "@/services/emailService";
+import type { ComplaintWithJoins } from "@/types/complaint";
 
 type ComplaintStatus = Database['public']['Enums']['complaint_status'];
-type ComplaintWithJoins = Database['public']['Tables']['complaints']['Row'] & {
-  departments: { name: string } | null;
-  maintenance_categories: { name: string } | null;
-};
+
 
 interface CompletionProofModalProps {
   complaint: ComplaintWithJoins;
