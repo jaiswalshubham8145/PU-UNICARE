@@ -11,6 +11,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/hooks/useAuth';
 import {
     Phone,
     Mail,
@@ -98,6 +99,8 @@ const statusConfig = {
 };
 
 function StaffCard({ staff }: { staff: StaffMember }) {
+    const { roles } = useAuth();
+    const isPrivileged = roles.some(r => ['admin', 'hod', 'principal'].includes(r));
     const status = statusConfig[staff.availability?.status as keyof typeof statusConfig] || statusConfig.offline;
     const StatusIcon = status.icon;
     const workloadPercent = staff.availability
@@ -207,26 +210,33 @@ function StaffCard({ staff }: { staff: StaffMember }) {
                     {/* Contact Actions */}
                     <div className="flex gap-2">
                         {staff.phone && (
-                            <>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="flex-1"
-                                    onClick={() => window.open(`tel:${staff.phone}`, '_blank')}
-                                >
-                                    <Phone className="h-4 w-4 mr-1" />
-                                    Call
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="flex-1 text-green-600 border-green-200 hover:bg-green-50"
-                                    onClick={() => window.open(`https://wa.me/${staff.phone?.replace(/\D/g, '')}`, '_blank')}
-                                >
-                                    <MessageCircle className="h-4 w-4 mr-1" />
-                                    WhatsApp
-                                </Button>
-                            </>
+                            isPrivileged ? (
+                                <>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex-1"
+                                        onClick={() => window.open(`tel:${staff.phone}`, '_blank')}
+                                    >
+                                        <Phone className="h-4 w-4 mr-1" />
+                                        Call
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex-1 text-green-600 border-green-200 hover:bg-green-50"
+                                        onClick={() => window.open(`https://wa.me/${staff.phone?.replace(/\D/g, '')}`, '_blank')}
+                                    >
+                                        <MessageCircle className="h-4 w-4 mr-1" />
+                                        WhatsApp
+                                    </Button>
+                                </>
+                            ) : (
+                                <div className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-mono text-slate-500" title="Full contact details reserved for department coordinators and administrators">
+                                    <Phone className="h-3.5 w-3.5 opacity-60" />
+                                    <span>+91 ••••{staff.phone.replace(/\D/g, '').slice(-4)}</span>
+                                </div>
+                            )
                         )}
                         <Button
                             variant="outline"

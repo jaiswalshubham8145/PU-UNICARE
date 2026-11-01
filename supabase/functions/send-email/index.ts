@@ -1,6 +1,44 @@
 
 
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
+// @ts-ignore: Deno module
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getCorsHeaders } from '../_shared/security.ts';
+import { createRateLimiter } from '../_shared/rateLimit.ts';
+
+const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY');
+
+const emailRateLimiter = createRateLimiter({
+  windowMs: 60 * 1000,
+  maxRequests: 30, // Max 30 email requests per minute per IP
+});
+
+function escapeHtml(val: unknown): string {
+  if (val === null || val === undefined) return '';
+  return String(val)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function sanitizeData(obj: Record<string, any>): Record<string, any> {
+  const sanitized: Record<string, any> = {};
+  for (const [key, val] of Object.entries(obj)) {
+    if (typeof val === 'string') {
+      sanitized[key] = escapeHtml(val);
+    } else if (typeof val === 'object' && val !== null && !Array.isArray(val)) {
+      sanitized[key] = sanitizeData(val);
+    } else if (Array.isArray(val)) {
+      sanitized[key] = val.map(item => (typeof item === 'string' ? escapeHtml(item) : item));
+    } else {
+      sanitized[key] = val;
+    }
+  }
+  return sanitized;
+}
 
 interface EmailPayload {
   type: 'new_complaint' | 'status_update' | 'assignment' | 'completion' | 'sla_breach' | 'progress_update' | 'work_started' | 'work_on_hold' | 'work_resumed' | 'verification_requested' | 'verification_rejected' | 'verification_approved' | 'complaint_submitted' | 'complaint_assigned' | 'escalated' | 'resolved' | 'feedback_request' | 'reminder' | 'digest'
@@ -504,52 +542,120 @@ const templates: Record<string, (data: any) => string> = {
 
 
 Deno.serve(async (req: Request) => {
-  try {
-    const payload: EmailPayload = await req.json()
+  const origin = req.headers.get('origin') || undefined;
+  const cors = getCorsHeaders(origin);
 
-    if (!RESEND_API_KEY) {
-      console.log('RESEND_API_KEY not configured - email would be sent:', JSON.stringify(payload, null, 2))
-      return new Response(JSON.stringify({ message: 'Email simulated (no API key)', payload }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      })
+  // 1. Handle CORS Preflight
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: cors });
+  }
+
+  // 2. Enforce Rate Limiting
+  const rateLimitResult = emailRateLimiter.check(req);
+  if (!rateLimitResult.allowed) {
+    return new Response(
+      JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
+      {
+        status: 429,
+        headers: {
+          ...cors,
+          'Content-Type': 'application/json',
+          'Retry-After': String(Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000)),
+        },
+      }
+    );
+  }
+
+  try {
+    // 3. Authenticate Caller using Supabase JWT
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Missing Authorization header' }), {
+        status: 401,
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      });
     }
 
-    const htmlBody = templates[payload.type]?.(payload.data) || `<div style="${baseStyles}"><div style="${contentStyles}"><p>Email notification from PU Unicare</p><p>Type: ${payload.type}</p></div></div>`
+    if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        global: { headers: { Authorization: authHeader } },
+      });
+
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        return new Response(JSON.stringify({ error: 'Unauthorized caller' }), {
+          status: 403,
+          headers: { ...cors, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    const payload: EmailPayload = await req.json();
+
+    // 4. Validate Recipients
+    if (!Array.isArray(payload.to) || payload.to.length === 0 || payload.to.length > 50) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid recipient list (1 to 50 recipients allowed)' }),
+        { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    for (const email of payload.to) {
+      if (!emailRegex.test(email)) {
+        return new Response(
+          JSON.stringify({ error: `Invalid recipient email address format: ${email}` }),
+          { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // 5. Sanitize Template Data to prevent HTML Injection
+    const safeData = sanitizeData(payload.data || {});
+
+    if (!RESEND_API_KEY) {
+      console.log('RESEND_API_KEY not configured - email would be sent:', JSON.stringify({ ...payload, data: safeData }, null, 2));
+      return new Response(JSON.stringify({ message: 'Email simulated (no API key)', payload: { ...payload, data: safeData } }), {
+        status: 200,
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const htmlBody = templates[payload.type]?.(safeData) || `<div style="${baseStyles}"><div style="${contentStyles}"><p>Email notification from PU Unicare</p><p>Type: ${escapeHtml(payload.type)}</p></div></div>`;
 
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${RESEND_API_KEY}`
+        'Authorization': `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
         from: 'PU Unicare <noreply@unicare.pu.edu>',
         to: payload.to,
-        subject: payload.subject,
-        html: htmlBody
-      })
-    })
+        subject: escapeHtml(payload.subject || 'PU Unicare Notification'),
+        html: htmlBody,
+      }),
+    });
 
-    const data = await res.json()
+    const data = await res.json();
 
     if (!res.ok) {
-      console.error('Resend API error:', data)
+      console.error('Resend API error:', data);
       return new Response(JSON.stringify({ error: data }), {
         status: res.status,
-        headers: { 'Content-Type': 'application/json' }
-      })
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      });
     }
 
     return new Response(JSON.stringify({ success: true, id: data.id }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    })
+      headers: { ...cors, 'Content-Type': 'application/json' },
+    });
   } catch (error: any) {
-    console.error('Email function error:', error)
+    console.error('Email function error:', error);
     return new Response(JSON.stringify({ error: error?.message || 'Unknown error' }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    })
+      headers: { ...cors, 'Content-Type': 'application/json' },
+    });
   }
-})
+});

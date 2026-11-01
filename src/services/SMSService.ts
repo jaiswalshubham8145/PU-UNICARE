@@ -11,6 +11,8 @@
  * - TextLocal
  */
 
+import { supabase } from "@/integrations/supabase/client";
+
 export type SMSType =
     | 'complaint_submitted'
     | 'complaint_assigned'
@@ -148,6 +150,26 @@ async function sendViaFast2SMS(
     message: string,
     config: SMSConfig
 ): Promise<{ success: boolean; error?: string }> {
+    const cleanPhone = phone.replace(/\D/g, '').slice(-10);
+
+    // 1. Try secure backend dispatch via Supabase Edge Function first
+    try {
+        const { data, error } = await supabase.functions.invoke("send-sms", {
+            body: {
+                phone: cleanPhone,
+                message,
+                senderId: config.senderId || "TXTIND",
+            }
+        });
+
+        if (!error && data?.success) {
+            console.log(`[Fast2SMS] Successfully sent via backend Edge Function to ${phone}`);
+            return { success: true };
+        }
+    } catch {
+        // Fall through to client dispatch if edge function is unavailable
+    }
+
     if (!config.apiKey) {
         return { success: false, error: 'Fast2SMS API key not configured' };
     }
@@ -166,7 +188,7 @@ async function sendViaFast2SMS(
                 message: message,
                 language: "english",
                 flash: 0,
-                numbers: phone.replace(/\D/g, '').slice(-10), // Clean to 10 digits
+                numbers: cleanPhone,
             })
         });
 
